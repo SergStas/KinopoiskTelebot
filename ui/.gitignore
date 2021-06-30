@@ -1,4 +1,4 @@
 $ cat .gitignore
 
-D:\Personal Could\OneDrive\Рабочий стол\practic\python\KinopoiskTelebot\.vscode
+/.viscode
 launch.json
