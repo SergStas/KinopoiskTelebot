@@ -11,7 +11,7 @@
             "program": "${file}",
             "console": "integratedTerminal",
             "env": {
-                "TOKEN": ""
+                "TOKEN": "1840456562:AAEVs2Teifyfojb3ep_FctSburLggTHy_00"
             }
         }
     ]
