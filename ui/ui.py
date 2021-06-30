@@ -7,8 +7,6 @@ import importlib.util
 from PIL import Image,ImageFilter
 from telebot.apihelper import delete_message
 
-spec = importlib.util.spec_from_file_location("NetworkModule","..//network//NetworkModule.py")
-
 class User:
     def __init__(self,id,):
         self.id = id
