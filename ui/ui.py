@@ -3,24 +3,34 @@
 import os
 import telebot
 import asyncio
-import importlib.util
-from PIL import Image,ImageFilter
 from telebot.apihelper import delete_message
 
 class User:
     def __init__(self,id,):
-        self.id = id
-        self.type = "usu"
+        self.user_id = id
+        self.user_type = "usu"
         user_list.append(self)
+class Person:
+    def __init__(self, person_id, full_name, positions, start_year, end_year):
+        self.person_id = person_id
+        self.full_name = full_name
+        self.positions = positions
+        self.start_year = start_year
+        self.end_year = end_year
+
 
 bot = telebot.TeleBot(os.environ["TOKEN"])
 bot_chat = {}
 user_list = []
-person_list = []
+person_list = [
+    Person(0,"Уилл Смит",0,1985,2021),
+    Person(1,"Вин Дизель",1,1980,2021),
+    Person(2,"Скарлетт Йохансон",2,1920,2021)
+]
 
 def user_adder(id):
     user = User(id)
-    bot_chat[user.id] = {
+    bot_chat[user.user_id] = {
         "id": None,
         "help": None,
         "markup": None,
@@ -29,7 +39,7 @@ def user_adder(id):
 def user_finder(id):
     for i in range(len(user_list)):
         user = user_list[i]
-        if user.id == id:
+        if user.user_id == id:
             return user
 def user_checker(id):
     if user_finder(id) != None:
@@ -52,8 +62,6 @@ def message_help_sender(chatId):
     stroke += stroke_pointer("/id - Отобразит ваш идентификатор в Телеграмме.")
     stroke += stroke_pointer("/func - Отобразит перечень функций данного приложения.")
     stroke += stroke_pointer("/help - Отобразит текущий список команд для данного бота.")
-    stroke += stroke_pointer("/restart - Перезапустит бота.")
-    stroke += stroke_pointer("/profile_drop - Удалит ваши данные, хранящиеся в приложении.")
     return bot.send_message(chatId,stroke)
 
 def functional_geter():
@@ -68,16 +76,24 @@ def functional_graf_geter(call):
 def functional_cron_geter(call):
     bot.send_message(call.message.chat.id,"`Хронология`")
 def functional_persons_geter(call):
-    bot.send_message(call.message.chat.id,"`Список персон`")
+    stroke = bot_chat[call.message.chat.id]["markup"].text
+    bot.edit_message_text("* Получить список кино-персон",call.message.chat.id,bot_chat[call.message.chat.id]["markup"].id)
+    stroke = ""
+    for i in range(len(person_list)):
+        string = f"ID: {'0' * (4-len(str(person_list[i].person_id)))}{person_list[i].person_id}; "
+        string += f"{person_list[i].full_name}; "
+        string += f"Период: {str(person_list[i].start_year)}-{str(person_list[i].end_year)}; "
+        stroke += stroke_pointer(string)
+    bot.send_message(call.message.chat.id,stroke)
 def functional_person_films_geter(call):
     bot.send_message(call.message.chat.id,"`Список фильмов с участием персоны`")
 
 async def dialog_first_messanger(chatId,user):
-    bot_chat[user.id]["first_message"] = bot.send_message(chatId,"Приветствуем вас, уважаемый пользователь!")
+    bot_chat[user.user_id]["first_message"] = bot.send_message(chatId,"Приветствуем вас, уважаемый пользователь!")
     await asyncio.sleep(1)
-    bot_chat[user.id]["help"] = message_help_sender(chatId)
+    bot_chat[user.user_id]["help"] = message_help_sender(chatId)
     await asyncio.sleep(1)
-    bot_chat[user.id]["markup"] = bot.send_message(chatId,"Какой функционал вы желаете использовать?",reply_to_message_id=True,reply_markup=functional_geter())
+    bot_chat[user.user_id]["markup"] = bot.send_message(chatId,"Какой функционал вы желаете использовать?",reply_to_message_id=True,reply_markup=functional_geter())
 def dialog_target_messanger(chatId,user):
     return None
 
@@ -118,7 +134,6 @@ def query_handler(call):
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     elif call.data == "persons":
         functional_persons_geter(call)
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
     elif call.data == "person_films":
         functional_person_films_geter(call)
         bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
