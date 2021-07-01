@@ -1,12 +1,13 @@
 # TODO: Nikita
 
 import os
+import re
 from typing import AsyncContextManager
 import telebot
 import asyncio
 from telebot.apihelper import delete_message
 
-from enum import Enum
+from enum import Enum, auto
 
 class Stage(Enum):
     nameSelect = 0
@@ -23,29 +24,28 @@ class Target(Enum):
     persons = 2,
     person_films = 3
 class Genre(Enum):
-    any = 0
-    action = 1
-    slasher = 2
-    thriller = 3
-    military = 4
-    horror = 5
-    fiction = 6
-    fantasy = 7
-    noir = 8
-    crime = 9
-    detective = 10
-    cartoon = 11
-    comedy = 12
-    family = 13
-    western = 14
-    history = 15
-    biography = 16
-    sport = 17
-    adventures = 18
-    melodrama = 19
-    drama = 20
-    child = 21
-    musical = 22
+    Экшен = auto()
+    Слэшер = auto()
+    Боевик = auto()
+    Военный = auto()
+    Ужасы = auto()
+    Фантастика = auto()
+    Фэнтези = auto()
+    Нуар = auto()
+    Криминал = auto()
+    Детектив = auto()
+    Мультфильм = auto()
+    Комедия = auto()
+    Семейный = auto()
+    Вестерн = auto()
+    Исторический = auto()
+    Биография = auto()
+    Спортивный = auto()
+    Приключенческий = auto()
+    Мелодрама = auto()
+    Драма = auto()
+    Детский = auto()
+    Мюзикл = auto()
 
 class User:
     def __init__(self,id,):
@@ -60,6 +60,7 @@ class Person:
         self.start_year = start_year
         self.end_year = end_year
 
+genre_max_value = 22
 bot = telebot.TeleBot(os.environ["TOKEN"])
 bot_chat = {}
 user_list = []
@@ -154,25 +155,56 @@ def functional_graf_geter(call):
     select_targer(call.message,Target.graf.value)
     select_stager(call.message,Stage.nameSelect.value)
     bot.edit_message_text("* Получить граф кино-персоны",call.message.chat.id,bot_chat[call.message.chat.id]["markup"].id)
-    message = bot.send_message(call.message.chat.id,"Укажите полное имя искомого актёра: ")
+    message = bot.send_message(call.message.chat.id,"Укажите полное имя искомой кино-персоны: ")
 async def functional_graf_pid_selecter(message):
-    bot.send_message(message.chat.id,"Вы выбрали персону!")
-    return None
+    id = int(message.text.split("_")[2])
+    for i in bot_chat[message.chat.id]["select"]["person"]:
+        if i.person_id == id:
+            bot_chat[message.chat.id]["select"]["person"] = bot_chat[message.chat.id]["select"]["person"][id]
+            bot_chat[message.chat.id]["select"]["stage"] = Stage.generSelect.value
+            bot.send_message(message.chat.id,"Вы выбрали персону!")
+            await asyncio.sleep(1)
+            bot.send_message(message.chat.id,"Введите значения предпочтительных жанров.\nЕсли не будет указано ни одно значение, то выбранными будут все жанры.\nПример ввода: 1 2 7")
+            stroke = stroke_sectioner("Список жанров:")
+            for i in Genre:
+                stroke += stroke_pointer(f"{'0' * (2 - len(str(i.value)))}{i.value} {i.name};")
+            await asyncio.sleep(1)
+            bot.send_message(message.chat.id,stroke)
+            return None
+        bot.send_message(message.chat.id,"Соответсвие не найдено!")
 async def functional_graf_name_selecter(message):
     person = person_name_filter(message.text)
     if len(person) == 1:
         bot_chat[message.chat.id]["select"]["person"] = person[0]
         bot_chat[message.chat.id]["select"]["stage"] = Stage.generSelect.value
-        bot.send_message(message.chat.id,stroke_personer(person[0]))
+        bot.send_message(message.chat.id,"Найдено однозначеное соответсвие!")
+        await asyncio.sleep(1)
+        bot.send_message(message.chat.id,"Введите значения предпочтительных жанров.\nЕсли не будет указано ни одно значение, то выбранными будут все жанры.\nПример ввода: 1 2 7")
+        stroke = stroke_sectioner("Список жанров:")
+        for i in Genre:
+            stroke += stroke_pointer(f"{i.name}: {i.value};")
+        await asyncio.sleep(1)
+        bot.send_message(message.chat.id,stroke)
     elif len(person) > 1:
         bot_chat[message.chat.id]["select"]["person"] = person
         bot_chat[message.chat.id]["select"]["stage"] = Stage.idSelect.value
-        bot.send_message(message.chat.id,stroke_sectioner("Найденные соответствия:") + person_mas_pointer(person))
+        bot.send_message(message.chat.id,"Выберите `p_id` из перечня, чтобы однозначно определить нужную кино-персону.")
         await asyncio.sleep(1)
-        bot.send_message(message.chat.id,"Выберите `p_id` из перечня, чтобы однозначно определить нужного актёра.")
+        bot.send_message(message.chat.id,stroke_sectioner("Найденные соответствия:") + person_mas_pointer(person))
     else:
         bot.send_message(message.chat.id,len(person)) # У
         bot.send_message(message.chat.id,"Соответствия не найдены")
+async def functional_graf_genre_selecter(message):
+    stroke = re.findall("[0-9]{1,2}",message.text)
+    mas = set(stroke)
+    mas = list(mas)
+    stroke = []
+    for i in range(len(mas)):
+        if int(mas[i]) <= genre_max_value:
+            bot_chat[message.chat.id]["select"]["genre"].append(int(mas[i])) # Apd
+            stroke.append(str(mas[i]))
+    bot.send_message(message.chat.id,"Выбраны: " + ",".join(stroke))
+    bot.send_message(message.chat.id,"Укажите минимальное количество общих фильмов для отображения графа.")
 
 def functional_cron_geter(call):
     bot_chat[call.message.chat.id]["select"]["target"] = Target.cron.value
@@ -191,7 +223,6 @@ def functional_persons_geter(call):
 
 def functional_person_films_geter(call):
     bot_chat[call.message.chat.id]["select"]["target"] = Target.person_films.value
-    print(Target.person_films.value)
     bot.send_message(call.message.chat.id,"`Список фильмов с участием персоны`")
 
 async def dialog_first_messanger(chatId,user):
@@ -224,7 +255,6 @@ def help_commander(message):
             bot_chat[message.chat.id]["help"] = message_help_sender(message.chat.id)
         
         if bot_chat[message.chat.id]["select"]["target"] != None:
-            print(message.text.find("/p_id"))
             if message.text.find("/p_id") != -1:
                 bot_chat[message.chat.id]["select"]["id"] == int(message.text.split(" ")[2])
                 bot.send_message(message.chat.id,bot_chat[message.chat.id]["select"]["id"])
@@ -236,6 +266,8 @@ def text_determinant(message):
             asyncio.run(functional_graf_name_selecter(message))
         elif chat_select["stage"] == Stage.idSelect.value:
             asyncio.run(functional_graf_pid_selecter(message))
+        elif chat_select["stage"] == Stage.generSelect.value:
+            asyncio.run(functional_graf_genre_selecter(message))
     else:
         user_adder(message.from_user.id)
         asyncio.run(dialog_first_messanger(message.chat.id,user_finder(message.from_user.id)))
