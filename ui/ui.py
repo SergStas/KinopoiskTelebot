@@ -86,6 +86,7 @@ def user_adder(id):
             "genre": [],
             "date_start": None,
             "date_end": None,
+            "treshold": None,
             "person": []
         }
     }
@@ -203,8 +204,37 @@ async def functional_graf_genre_selecter(message):
         if int(mas[i]) <= genre_max_value:
             bot_chat[message.chat.id]["select"]["genre"].append(int(mas[i])) # Apd
             stroke.append(str(mas[i]))
+    bot_chat[message.chat.id]["select"]["stage"] = Stage.thresholdSelect.value
     bot.send_message(message.chat.id,"Выбраны: " + ",".join(stroke))
-    bot.send_message(message.chat.id,"Укажите минимальное количество общих фильмов для отображения графа.")
+    await asyncio.sleep(1)
+    bot.send_message(message.chat.id,"Укажите минимальное количество общих фильмов для отображения графа:")
+async def functional_graf_treshold_selecter(message):
+    num = re.search("[1-9]{1}[0-9]*|[1-9]{1}",message.text).group(0)
+    if num != None:
+        bot_chat[message.chat.id]["select"]["treshold"] = num
+        bot.send_message(message.chat.id,stroke_pointer(f"Выбранный лимит общих фильмов: {num}"))
+        await asyncio.sleep(1)
+        bot_chat[message.chat.id]["select"]["stage"] = Stage.startYearSelect.value
+        bot.send_message(message.chat.id,stroke_sectioner("Укажите стартовый год поиска:") + "Пример ввода: 2000")
+async def functional_graf_startYear_select(message):
+    year = re.search("19[2-9]{1}[0-9]{1}|200[0-9]{1}|201[0-9]{1}|202[0-2]{1}",message.text).group(0)
+    bot_chat[message.chat.id]["select"]["date_start"] = year
+    bot_chat[message.chat.id]["select"]["stage"] = Stage.endYearSelect.value
+    bot.send_message(message.chat.id,stroke_pointer(f"Начальный указанный год поиска: {year}"))
+    await asyncio.sleep(1)
+    bot.send_message(message.chat.id,"Укажите конечный год поиска.")
+async def functional_graf_endYear_select(message):
+    year = re.search("19[2-9]{1}[0-9]{1}|200[0-9]{1}|201[0-9]{1}|202[0-2]{1}",message.text).group(0)
+    if bot_chat[message.chat.id]["select"]["date_start"] <= year:
+        bot_chat[message.chat.id]["select"]["date_end"] = year
+        bot.send_message(message.chat.id,stroke_pointer(f"Конечный указанный год поиска: {year}"))
+        await asyncio.sleep(1)
+        bot.send_message(message.chat.id,"Ожидайте построения графа!")
+    elif bot_chat[message.chat.id]["select"]["date_start"] > year:
+        bot.send_message(message.chat.id,f"Конечный год `{year}` не может быть меньше стартового года `{bot_chat[message.chat.id]['select']['date_start']}`")
+        await asyncio.sleep(1)
+        bot.send_message(message.chat.id,"Попробуйте указать корректную дату повторно.")
+
 
 def functional_cron_geter(call):
     bot_chat[call.message.chat.id]["select"]["target"] = Target.cron.value
@@ -268,6 +298,12 @@ def text_determinant(message):
             asyncio.run(functional_graf_pid_selecter(message))
         elif chat_select["stage"] == Stage.generSelect.value:
             asyncio.run(functional_graf_genre_selecter(message))
+        elif chat_select["stage"] == Stage.thresholdSelect.value:
+            asyncio.run(functional_graf_treshold_selecter(message))
+        elif chat_select["stage"] == Stage.startYearSelect.value:
+            asyncio.run(functional_graf_startYear_select(message))
+        elif chat_select["stage"] == Stage.endYearSelect.value:
+            asyncio.run(functional_graf_endYear_select(message))
     else:
         user_adder(message.from_user.id)
         asyncio.run(dialog_first_messanger(message.chat.id,user_finder(message.from_user.id)))
