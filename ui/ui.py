@@ -8,6 +8,8 @@ import asyncio
 from telebot.apihelper import delete_message
 
 from enum import Enum, auto
+print("WW")
+
 
 class Stage(Enum):
     nameSelect = 0
@@ -63,7 +65,9 @@ class Person:
 genre_max_value = 22
 bot = telebot.TeleBot(os.environ["TOKEN"])
 bot_chat = {}
-user_list = []
+user_list = [
+    
+]
 person_list = [
     Person(0,"Уилл Смит",0,1985,2021),
     Person(1,"Вин Дизель",1,1980,2021),
