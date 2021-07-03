@@ -8,7 +8,6 @@ import asyncio
 from telebot.apihelper import delete_message
 
 from enum import Enum, auto
-print("WW")
 
 
 class Stage(Enum):
