@@ -10,15 +10,10 @@ class DBHolder:  # TODO:  Stepa
 
 
     @staticmethod
-    def get_genres():
-        return [] # ВОПРОС ЗАЧЕМ, есть енум
-
-
-    @staticmethod
     def add_person(personIN):  # person_id, full_name, photo_url
         if (db.DBWork.execute_query_to_return("select * from person where {0} = id".format(personIN.person_id)) == []):
             db.DBWork.execute_query("insert into person (id, full_name, photo_url) "
-                                    "values ({0},'{1}',{2})".format(personIN.person_id, personIN.full_name,
+                                    "values ({0},'{1}','{2}')".format(personIN.person_id, personIN.full_name,
                                                                          personIN.photo_url))
 
 
@@ -38,10 +33,11 @@ class DBHolder:  # TODO:  Stepa
                                     "({0}, {1}, {2}, {3})".format(relation.first, relation.second, relation.weight, params.id))
 
 
-
     @staticmethod
     def has_params(params): # boolean
-        pass
+        return db.DBWork.execute_query_to_return("select * from params where person_id = {0} start_year = {1} "
+                                                 "and end_year = {2} and threshold = {3} and is_actor = {4}"
+                 .format(params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor)) == []
 
 
     @staticmethod
@@ -68,7 +64,9 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def add_user_type(user_type):
-        pass
+        if(db.DBWork.execute_query_to_return("select * from user_type where id = {0} and name = '{1}'"
+                                                     .format(user_type.name, user_type.name.value)) == {}):
+            db.DBWork.execute_query("insert into user_type (id, name) values ({0}, {1})".format(user_type.name, user_type.value))
 
 
     @staticmethod
