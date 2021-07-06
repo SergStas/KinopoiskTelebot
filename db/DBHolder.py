@@ -18,11 +18,11 @@ class DBHolder:  # TODO:  Stepa
 
 
     @staticmethod
-    def add_params(params): #id, person_id, start_year, end_year, threshold, is_actor
+    def add_params(params): # person_id, start_year, end_year, threshold, is_actor
         if(db.DBWork.execute_query_to_return("select * from params where id = {0}".format(params.id)) == []):
-            db.DBWork.execute_query("insert into params (id, person_id, start_year, end_year, threshold, is_actor) "
-                            "values ({0}, {1}, {2}, {3}, {4}, {5})"
-                            .format(params.id, params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor))
+            db.DBWork.execute_query("insert into params (person_id, start_year, end_year, threshold, is_actor) "
+                            "values ({0}, {1}, {2}, {3}, {4})"
+                            .format(params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor))
 
 
     @staticmethod
@@ -42,24 +42,55 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def get_full(params): # Relation[]
-        return []
+        id = DBHolder.find_id(params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor)
+        return db.DBWork.relation_querry("select * from colleague where params_id = {0}".format(id))
 
 
     @staticmethod
     def is_part(params): # boolean // все то же самое, кроме порога: существующий порог ниже требуемого
-        pass
+        thr = int
+        if(db.DBWork.execute_query_to_return("select * from params where person_id = {0} start_year = {1} "
+                                          "and end_year = {2} and is_actor = {3}"
+                                  .format(params.person_id, params.start_year, params.end_year, params.is_actor)) != []):
+            thr = DBHolder.find_theshold(params.person_id, params.start_year, params.end_year, params.is_actor)
+        return thr < params.threshold
 
 
     @staticmethod
     def get_part(params): # Relation[] // сохранение новых параметров, сохранение связей с новыми параметрами
-        return []
+        thr = DBHolder.find_theshold(params.person_id, params.start_year, params.end_year, params.is_actor)
+        id = DBHolder.find_id(params.person_id, params.start_year, params.end_year, thr, params.is_actor)
+        answer = db.DBWork.relation_querry("select * from colleague where params_id = {0}".format(id))
+        result = []
+        for r in answer:
+            if(r.weight >= params.threshold):
+                result.append(r)
+        return result
 
+
+    @staticmethod
+    def find_id(person_id, start_year, end_year, threshold, is_actor):
+        return db.DBWork.execute_query_to_return("select id from params where person_id = {0} start_year = {1} "
+                                          "and end_year = {2} and threshold = {3} and is_actor = {4}"
+                                  .format(person_id, start_year, end_year, threshold, is_actor))
+
+
+    @staticmethod
+    def find_theshold(person_id, start_year, end_year, is_actor): #int
+        return db.DBWork.execute_query_to_return("select threshold from params where person_id = {0} start_year = {1} "
+                                        "and end_year = {2} and is_actor = {3}"
+                                        .format(person_id, start_year, end_year, is_actor))
 
     @staticmethod
     def get_min_threshold(params): #int
         # поиск точно таких же параметров, но порог которых выше, возвращение наименьшего порога (то есть ближайшего);
         # если параметров таких вообще нет, то возвращает 0
-        pass
+        result = None
+        for t in DBHolder.find_theshold(params.person_id, params.start_year, params.end_year, params.is_actor):
+            result = min(t)
+        if result is None:
+            result = 0
+        return result
 
 
     @staticmethod

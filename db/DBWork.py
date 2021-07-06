@@ -43,7 +43,7 @@ def execute_query_to_return(query):
     return cursor.fetchall()
 
 def relation_querry(query):
-    connection.row_factory = lambda cursor, row: Relation(row[0], row[1], row[2])
+    connection.row_factory = lambda cursor, row: Relation(row[0], row[1], row[2], row[3])
     cursor = connection.cursor()
     try:
         cursor.execute(query)
