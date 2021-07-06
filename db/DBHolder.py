@@ -37,7 +37,7 @@ class DBHolder:  # TODO:  Stepa
     def has_params(params): # boolean
         return db.DBWork.execute_query_to_return("select * from params where person_id = {0} start_year = {1} "
                                                  "and end_year = {2} and threshold = {3} and is_actor = {4}"
-                 .format(params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor)) == []
+                 .format(params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor)) != []
 
 
     @staticmethod
