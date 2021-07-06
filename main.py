@@ -12,31 +12,18 @@ def print_hi(name):
     print(f'Hi, {name}')
     bd.start_bd()
 
-    #a = Person(0, 'Well Smooth', [Position.actor, Position.producer], 1980, 2020)
-    #b = Person(20, 'Samuel Ponk', [Position.actor], 1990, 2021)
-    #c = Person(4, 'Ben Cam', [Position.soundman], 2010, 2021)
-    #holder.add_genre(Genre.action)
-    #holder.add_genre(Genre.horror)
-    #holder.add_genre(Genre.melodrama)
-    #holder.add_position(Position.actor)
-    #holder.add_position(Position.producer)
-    #holder.add_position(Position.soundman)
+    a = Person(0, 'Well Smooth', [Position.actor, Position.other], 1980, 2020)
+    b = Person(20, 'Samuel Ponk', [Position.actor], 1990, 2021)
+    c = Person(4, 'Ben Cam', [Position.other], 2010, 2021)
+    d = Person(1, 'Jim Foos', [Position.other, Position.actor], 1990, 2021)
+    e = Person(5, 'Cole Berne', [Position.actor], 1986, 2021)
+    f = Person(7, 'Monk Zigh', [Position.actor, Position.other], 1998, 2021)
 
-    #holder.add_film(Film("Soul", [a, b, c], 2012, [Genre.horror, Genre.action]))
-    #holder.add_film(Film("DOOM", [a, b, c], 2018, [Genre.melodrama]))
-
-    #holder.add_person(a,1)
-    #holder.add_person(b,1)
-    #holder.add_person(c,1)
-    #holder.add_person(a,2)
-    #holder.add_person(b,2)
-    #holder.add_person(c,2)
+    holder.add_genre(Genre.action)
+    holder.add_genre(Genre.horror)
+    holder.add_genre(Genre.melodrama)
 
     DBWork.show_all_tables_values()
-    for p in holder.get_all_actors():
-        print(p.full_name)
-    for p in holder.get_all_genres():
-        print(p)
 
 
 if __name__ == '__main__':

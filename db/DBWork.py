@@ -1,5 +1,6 @@
 import sqlite3 as sq
 from sqlite3 import Error
+from models.dataclasses.Relation import Relation
 
 
 def create_connection(pathDB):  # pathDB - text
@@ -41,8 +42,19 @@ def execute_query_to_return(query):
         print(f"The error '{e}' occurred")
     return cursor.fetchall()
 
+def relation_querry(query):
+    connection.row_factory = lambda cursor, row: Relation(row[0], row[1], row[2])
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query)
+        connection.commit()
+    except Error as e:
+        print(f"The error '{e}' occurred")
+    connection.row_factory = lambda cursor, row: row
+    return cursor.fetchall()
 
-tables = ['genre', 'position', 'person', 'film', 'genre_film', 'person_film', 'person_position_film', 'colleague']
+
+tables = ['genre', 'person', 'params', 'colleague', 'params_genre', 'user_type', 'user', 'req', 'fav']
 
 
 def show_all_tables_values():
