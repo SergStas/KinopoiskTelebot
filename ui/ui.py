@@ -18,8 +18,7 @@ from typing import AsyncContextManager
 from telebot.apihelper import delete_message
 from asyncio.subprocess import create_subprocess_shell
 
-# bot = telebot.TeleBot(os.environ["TOKEN"])
-bot = telebot.TeleBot("1840456562:AAEVs2Teifyfojb3ep_FctSburLggTHy_00")
+bot = telebot.TeleBot(os.environ["TOKEN"])
 bot_session = []
 bot_adm_session = []
 bot_bos_session = []
