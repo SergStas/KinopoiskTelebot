@@ -1,327 +1,172 @@
-# TODO: Nikita
+# TODO: Nikita 1170650256
 
 import os
 import re
-from typing import AsyncContextManager
 import telebot
 import asyncio
+import datetime
+from datetime import *
+from class_ui import *
+from def_user import *
+from def_admin import *
+from def_stroke import *
+from def_select import *
+from def_dialog import *
+from def_session import *
+from def_section import *
+from typing import AsyncContextManager
 from telebot.apihelper import delete_message
+from asyncio.subprocess import create_subprocess_shell
 
-from enum import Enum, auto
+# bot = telebot.TeleBot(os.environ["TOKEN"])
+bot = telebot.TeleBot("1840456562:AAEVs2Teifyfojb3ep_FctSburLggTHy_00")
+bot_session = []
+bot_adm_session = []
+bot_bos_session = []
+bot_usu_session = []
 
-
-class Stage(Enum):
-    nameSelect = 0
-    idSelect = 1
-    generSelect = 2
-    thresholdSelect = 3
-    rankSelect = 4
-    startYearSelect = 5
-    endYearSelect = 6
-    res = 7
-class Target(Enum):
-    graf = 0,
-    cron = 1,
-    persons = 2,
-    person_films = 3
-class Genre(Enum):
-    Экшен = auto()
-    Слэшер = auto()
-    Боевик = auto()
-    Военный = auto()
-    Ужасы = auto()
-    Фантастика = auto()
-    Фэнтези = auto()
-    Нуар = auto()
-    Криминал = auto()
-    Детектив = auto()
-    Мультфильм = auto()
-    Комедия = auto()
-    Семейный = auto()
-    Вестерн = auto()
-    Исторический = auto()
-    Биография = auto()
-    Спортивный = auto()
-    Приключенческий = auto()
-    Мелодрама = auto()
-    Драма = auto()
-    Детский = auto()
-    Мюзикл = auto()
-
-class User:
-    def __init__(self,id,):
-        self.user_id = id
-        self.user_type = "usu"
-        user_list.append(self)
-class Person:
-    def __init__(self, person_id, full_name, positions, start_year, end_year):
-        self.person_id = person_id
-        self.full_name = full_name
-        self.positions = positions
-        self.start_year = start_year
-        self.end_year = end_year
-
-genre_max_value = 22
-bot = telebot.TeleBot(os.environ["TOKEN"])
 bot_chat = {}
-user_list = [
-    
+boss_id_list = [
+    632012083
+],
+admin_id_list = [
+    361877365,
+    426134463,
+    1839000131,
+    1170650256
 ]
 person_list = [
-    Person(0,"Уилл Смит",0,1985,2021),
-    Person(1,"Вин Дизель",1,1980,2021),
-    Person(2,"Скарлетт Йохансон",2,1920,2021),
-    Person(3,"Уилл Смит",3,1920,1977)
+    Person(0,"act","Уилл Смит",0,1985,2021,open("./Уилл_Смит.png","rb")),
+    Person(1,"act","Вин Дизель",1,1980,2021,open("./Вин_Дизель.png","rb")),
+    Person(2,"act","Скарлетт Йохансон",2,1920,2021,open("./Скарлетт_Йохансон.png","rb")),
+    Person(3,"act","Уилл Смит",3,1920,1977,open("./Левый_Чел.png","rb"))
 ]
 
-def user_adder(id):
-    user = User(id)
-    bot_chat[user.user_id] = {
-        "id": None,
-        "help": None,
-        "markup": None,
-        "first_message": None,
-        "select": {
-            "id": None,
-            "name": None,
-            "stage": None,
-            "target": None,
-            "genre": [],
-            "date_start": None,
-            "date_end": None,
-            "treshold": None,
-            "person": []
-        }
-    }
-def user_finder(id):
-    for i in range(len(user_list)):
-        user = user_list[i]
-        if user.user_id == id:
-            return user
-def user_checker(id):
-    if user_finder(id) != None:
-        return True
-    else:
-        return False
+testers_usu = [
+    1170650255,
+    1170650254,
+    1170650253,
+    1170650252,
+    1170650251,
+    1170650250,
+    1170650249,
+    1170650248,
+    1170650247,
+    1170650246,
+    1170650245,
+    1170650244,
+    1170650243,
+    1170650242,
+    1170650241,
+    1170650240,
+    1170650239,
+    1170650238,
+    1170650237,
+    1170650236,
+    1170650235,
+    1170650234,
+    1170650233,
+    1170650232,
+    1170650231,
+    1170650230
+]
+user_mas_adder(bot,bot_usu_session,testers_usu)
 
-def person_mas_pointer(mas):
-    stroke = ""
-    for i in range(len(mas)):
-        stroke += stroke_personer(mas[i])
-    return stroke
-def person_name_filter(name):
-    result = []
-    for i in range(len(person_list)):
-        if person_list[i].full_name == name:
-            result.append(person_list[i])
-    return result
-
-def stroke_pointer(stroke):
-    return f"* {stroke}\n"
-def stroke_personer(person):
-    return f"*/p_id_{'0' * (4 - len(str(person.person_id)))}{person.person_id}; Полное имя: {person.full_name}; Период: {person.start_year}-{person.end_year}\n"
-def stroke_sectioner(stroke):
-    return f"{stroke}\n-----\n"
-def stroke_mas_pointer(mas):
-    stroke = ""
-    for i in range(len(mas)):
-        stroke += f"* {mas[i].full_name} \n"
-    return stroke
-
-def select_idifer(message,targetVal):
-    return None
-def select_targer(message,targetVal):
-    bot_chat[message.chat.id]["select"]["target"] = targetVal
-def select_stager(message,stageVal):
-    bot_chat[message.chat.id]["select"]["stage"] = stageVal
-
-def message_send(chatId,stroke,markup):
-    if markup != None:
-        bot.send_message(chatId,stroke,reply_markup=markup)
-    else:
-        bot.send_message(chatId,stroke)
-def message_help_sender(chatId):
-    stroke = stroke_sectioner("Здесь вы сможете ознакомиться со списком команд для данного бота:")
-    stroke += stroke_pointer("/id - Отобразит ваш идентификатор в Телеграмме.")
-    stroke += stroke_pointer("/func - Отобразит перечень функций данного приложения.")
-    stroke += stroke_pointer("/help - Отобразит текущий список команд для данного бота.")
-    return bot.send_message(chatId,stroke)
-
-def functional_geter():
-    keyboard = telebot.types.InlineKeyboardMarkup()
-    keyboard.row(telebot.types.InlineKeyboardButton("Получить список кино-персон",callback_data="persons"))
-    keyboard.row(telebot.types.InlineKeyboardButton("Построить граф связей кино-персоны",callback_data="graf"))
-    keyboard.row(telebot.types.InlineKeyboardButton("Получить список фильмов кино-персоны",callback_data="person_films"))
-    keyboard.row(telebot.types.InlineKeyboardButton("Получить хронологию связей кино-персоны",callback_data="cron"))
-    return keyboard
-
-def functional_graf_geter(call):
-    select_targer(call.message,Target.graf.value)
-    select_stager(call.message,Stage.nameSelect.value)
-    bot.edit_message_text("* Получить граф кино-персоны",call.message.chat.id,bot_chat[call.message.chat.id]["markup"].id)
-    message = bot.send_message(call.message.chat.id,"Укажите полное имя искомой кино-персоны: ")
-async def functional_graf_pid_selecter(message):
-    id = int(message.text.split("_")[2])
-    for i in bot_chat[message.chat.id]["select"]["person"]:
-        if i.person_id == id:
-            bot_chat[message.chat.id]["select"]["person"] = bot_chat[message.chat.id]["select"]["person"][id]
-            bot_chat[message.chat.id]["select"]["stage"] = Stage.generSelect.value
-            bot.send_message(message.chat.id,"Вы выбрали персону!")
-            await asyncio.sleep(1)
-            bot.send_message(message.chat.id,"Введите значения предпочтительных жанров.\nЕсли не будет указано ни одно значение, то выбранными будут все жанры.\nПример ввода: 1 2 7")
-            stroke = stroke_sectioner("Список жанров:")
-            for i in Genre:
-                stroke += stroke_pointer(f"{'0' * (2 - len(str(i.value)))}{i.value} {i.name};")
-            await asyncio.sleep(1)
-            bot.send_message(message.chat.id,stroke)
-            return None
-        bot.send_message(message.chat.id,"Соответсвие не найдено!")
-async def functional_graf_name_selecter(message):
-    person = person_name_filter(message.text)
-    if len(person) == 1:
-        bot_chat[message.chat.id]["select"]["person"] = person[0]
-        bot_chat[message.chat.id]["select"]["stage"] = Stage.generSelect.value
-        bot.send_message(message.chat.id,"Найдено однозначеное соответсвие!")
-        await asyncio.sleep(1)
-        bot.send_message(message.chat.id,"Введите значения предпочтительных жанров.\nЕсли не будет указано ни одно значение, то выбранными будут все жанры.\nПример ввода: 1 2 7")
-        stroke = stroke_sectioner("Список жанров:")
-        for i in Genre:
-            stroke += stroke_pointer(f"{i.name}: {i.value};")
-        await asyncio.sleep(1)
-        bot.send_message(message.chat.id,stroke)
-    elif len(person) > 1:
-        bot_chat[message.chat.id]["select"]["person"] = person
-        bot_chat[message.chat.id]["select"]["stage"] = Stage.idSelect.value
-        bot.send_message(message.chat.id,"Выберите `p_id` из перечня, чтобы однозначно определить нужную кино-персону.")
-        await asyncio.sleep(1)
-        bot.send_message(message.chat.id,stroke_sectioner("Найденные соответствия:") + person_mas_pointer(person))
-    else:
-        bot.send_message(message.chat.id,len(person)) # У
-        bot.send_message(message.chat.id,"Соответствия не найдены")
-async def functional_graf_genre_selecter(message):
-    stroke = re.findall("[0-9]{1,2}",message.text)
-    mas = set(stroke)
-    mas = list(mas)
-    stroke = []
-    for i in range(len(mas)):
-        if int(mas[i]) <= genre_max_value:
-            bot_chat[message.chat.id]["select"]["genre"].append(int(mas[i])) # Apd
-            stroke.append(str(mas[i]))
-    bot_chat[message.chat.id]["select"]["stage"] = Stage.thresholdSelect.value
-    bot.send_message(message.chat.id,"Выбраны: " + ",".join(stroke))
-    await asyncio.sleep(1)
-    bot.send_message(message.chat.id,"Укажите минимальное количество общих фильмов для отображения графа:")
-async def functional_graf_treshold_selecter(message):
-    num = re.search("[1-9]{1}[0-9]*|[1-9]{1}",message.text).group(0)
-    if num != None:
-        bot_chat[message.chat.id]["select"]["treshold"] = num
-        bot.send_message(message.chat.id,stroke_pointer(f"Выбранный лимит общих фильмов: {num}"))
-        await asyncio.sleep(1)
-        bot_chat[message.chat.id]["select"]["stage"] = Stage.startYearSelect.value
-        bot.send_message(message.chat.id,stroke_sectioner("Укажите стартовый год поиска:") + "Пример ввода: 2000")
-async def functional_graf_startYear_select(message):
-    year = re.search("19[2-9]{1}[0-9]{1}|200[0-9]{1}|201[0-9]{1}|202[0-2]{1}",message.text).group(0)
-    bot_chat[message.chat.id]["select"]["date_start"] = year
-    bot_chat[message.chat.id]["select"]["stage"] = Stage.endYearSelect.value
-    bot.send_message(message.chat.id,stroke_pointer(f"Начальный указанный год поиска: {year}"))
-    await asyncio.sleep(1)
-    bot.send_message(message.chat.id,"Укажите конечный год поиска.")
-async def functional_graf_endYear_select(message):
-    year = re.search("19[2-9]{1}[0-9]{1}|200[0-9]{1}|201[0-9]{1}|202[0-2]{1}",message.text).group(0)
-    if bot_chat[message.chat.id]["select"]["date_start"] <= year:
-        bot_chat[message.chat.id]["select"]["date_end"] = year
-        bot.send_message(message.chat.id,stroke_pointer(f"Конечный указанный год поиска: {year}"))
-        await asyncio.sleep(1)
-        bot.send_message(message.chat.id,"Ожидайте построения графа!")
-    elif bot_chat[message.chat.id]["select"]["date_start"] > year:
-        bot.send_message(message.chat.id,f"Конечный год `{year}` не может быть меньше стартового года `{bot_chat[message.chat.id]['select']['date_start']}`")
-        await asyncio.sleep(1)
-        bot.send_message(message.chat.id,"Попробуйте указать корректную дату повторно.")
-
-
-def functional_cron_geter(call):
-    bot_chat[call.message.chat.id]["select"]["target"] = Target.cron.value
-    bot.send_message(call.message.chat.id,"`Хронология`")
-
-def functional_persons_geter(call):
-    bot_chat[call.message.chat.id]["select"]["target"] = Target.persons.value
-    bot.edit_message_text("* Получить список кино-персон",call.message.chat.id,bot_chat[call.message.chat.id]["markup"].id)
-    stroke = ""
-    for i in range(len(person_list)):
-        string = f"ID: {'0' * (4-len(str(person_list[i].person_id)))}{person_list[i].person_id}; "
-        string += f"{person_list[i].full_name}; "
-        string += f"Период: {str(person_list[i].start_year)}-{str(person_list[i].end_year)}; "
-        stroke += stroke_pointer(string)
-    bot.send_message(call.message.chat.id,stroke)
-
-def functional_person_films_geter(call):
-    bot_chat[call.message.chat.id]["select"]["target"] = Target.person_films.value
-    bot.send_message(call.message.chat.id,"`Список фильмов с участием персоны`")
-
-async def dialog_first_messanger(chatId,user):
-    bot_chat[user.user_id]["first_message"] = bot.send_message(chatId,"Приветствуем вас, уважаемый пользователь!")
-    await asyncio.sleep(1)
-    bot_chat[user.user_id]["help"] = message_help_sender(chatId)
-    await asyncio.sleep(1)
-    bot_chat[user.user_id]["markup"] = bot.send_message(chatId,"Какой функционал вы желаете использовать?",reply_to_message_id=True,reply_markup=functional_geter())
-def dialog_target_messanger(chatId,user):
-    return None
-
-@bot.message_handler(commands=["id","func","help","p_id"])
-def help_commander(message):
-    if user_finder(message.chat.id):
-        if bot_chat[message.chat.id]["first_message"] != None:
-            bot.delete_message(message.chat.id,bot_chat[message.chat.id]["first_message"].id)
-            bot_chat[message.chat.id]["first_message"] = None
-        
-        if message.text == "/id":
-            if bot_chat[message.chat.id]["id"] != None:
-                bot.delete_message(message.chat.id,bot_chat[message.chat.id]["id"].id)
-            bot_chat[message.chat.id]["id"] = bot.send_message(message.chat.id,f"Ваш ID: {message.chat.id}")
-        elif message.text == "/func":
-            if bot_chat[message.chat.id]["markup"] != None:
-                bot.delete_message(message.chat.id,bot_chat[message.chat.id]["markup"].id)
-            bot_chat[message.chat.id]["markup"] = bot.send_message(message.chat.id,"Какой функционал вы желаете использовать?",reply_markup=functional_geter())
-        elif message.text == "/help":
-            if bot_chat[message.chat.id]["help"] != None:
-                bot.delete_message(message.chat.id,bot_chat[message.chat.id]["help"].id)
-            bot_chat[message.chat.id]["help"] = message_help_sender(message.chat.id)
-        
-        if bot_chat[message.chat.id]["select"]["target"] != None:
-            if message.text.find("/p_id") != -1:
-                bot_chat[message.chat.id]["select"]["id"] == int(message.text.split(" ")[2])
-                bot.send_message(message.chat.id,bot_chat[message.chat.id]["select"]["id"])
-@bot.message_handler(content_types=["text"])
-def text_determinant(message):
-    if user_finder(message.from_user.id):
-        chat_select = bot_chat[message.chat.id]["select"]
-        if chat_select["stage"] == Stage.nameSelect.value:
-            asyncio.run(functional_graf_name_selecter(message))
-        elif chat_select["stage"] == Stage.idSelect.value:
-            asyncio.run(functional_graf_pid_selecter(message))
-        elif chat_select["stage"] == Stage.generSelect.value:
-            asyncio.run(functional_graf_genre_selecter(message))
-        elif chat_select["stage"] == Stage.thresholdSelect.value:
-            asyncio.run(functional_graf_treshold_selecter(message))
-        elif chat_select["stage"] == Stage.startYearSelect.value:
-            asyncio.run(functional_graf_startYear_select(message))
-        elif chat_select["stage"] == Stage.endYearSelect.value:
-            asyncio.run(functional_graf_endYear_select(message))
-    else:
-        user_adder(message.from_user.id)
-        asyncio.run(dialog_first_messanger(message.chat.id,user_finder(message.from_user.id)))
 
 @bot.callback_query_handler(func=lambda call: True)
-def query_handler(call):
-    if call.data == "cron":
-        functional_cron_geter(call)
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
+def call_determenant(call):
+    bot_session.extend(bot_bos_session)
+    bot_session.extend(bot_adm_session)
+    bot_session.extend(bot_usu_session)
+    session = session_finder(bot_session,call.message.chat.id)
+    if call.data == "up_usu_list":
+        markup_usu_list_rechanger(bot_usu_session,session,True)
+    elif call.data == "down_usu_list":
+        markup_usu_list_rechanger(bot_usu_session,session,False)
+    elif call.data == "up_adm_list":
+        markup_adm_list_rechanger(bot_adm_session,session,True)
+    elif call.data == "up_adm_list":
+        markup_adm_list_rechanger(bot_usu_session,session,False)
+    elif call.data == "cron":
+        asyncio.run(cron_selecter(session))
     elif call.data == "graf":
-        functional_graf_geter(call)
-        #bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
-    elif call.data == "persons":
-        functional_persons_geter(call)
-    elif call.data == "person_films":
-        functional_person_films_geter(call)
-        bot.edit_message_reply_markup(call.message.chat.id, call.message.message_id)
-bot.polling()
+        asyncio.run(graf_selecter(session))
+    elif call.data.find("get_usu") != -1:
+        user_info_geter(session,bot_usu_session[int(call.data.split("_")[2])])
+    if session.select.stage == Stage.typeSelect.value:
+        if call.data == "set_act" or call.data == "set_stf":
+            asyncio.run(functional_type_selecter(session,call.data.split("_")[1]))
+    if session.select.stage == Stage.idSelect.value:
+        if call.data.find("set_pers") != -1:
+            asyncio.run(functional_pid_selecter(session,int(call.data.split("_")[2])))
+            return None
+    if session.select.stage == Stage.generSelect.value:
+        print(call.data)
+        if call.data.find("gener_add") != -1 or call.data.find("gener_remove") != -1:
+            asyncio.run(functional_gener_selecter(session,call.data))
+            return None
+        if call.data == "done":
+            asyncio.run(functional_gener_selecter(session,call.data))
+            return None
+        if call.data == "none":
+            return None
+    if session.select.stage == Stage.rankSelect.value:
+        if call.data.find("set") != -1:
+            asyncio.run(functional_rank_selecter(session,int(call.data.split("_")[1])))
+    if session.select.stage == Stage.result.value:
+        if call.data == "done" or call.data == "cancel":
+            asyncio.run(functional_result_selecter(session,call.data))
+    bot_session.clear()
+@bot.message_handler(commands=[
+    "id",
+    "func",
+    "help",
+    "clear",
+    "get_users",
+    "get_admins"])
+def command_determinant(message):
+    bot_session.extend(bot_bos_session)
+    bot_session.extend(bot_adm_session)
+    bot_session.extend(bot_usu_session)
+    session = session_finder(bot_session,message.chat.id)
+    if session != None:
+        if session.user.date_last != date.today():
+            session.user.date_last = date.today()
+        if message.text == "/id":
+            id_geter(session)
+        elif message.text == "/func":
+            func_geter(session)
+        elif message.text == "/help":
+            help_geter(session)
+        elif message.text == "/clear":
+            clear_geter(session)
+        elif message.text == "/get_users":
+            asyncio.run(users_geter(bot_usu_session,session))
+        elif message.text == "/get_admins":
+            asyncio.run(admins_geter(bot_adm_session,session))
+@bot.message_handler(content_types=["text"])
+def message_determinant(message):
+    bot_session.extend(bot_bos_session)
+    bot_session.extend(bot_adm_session)
+    bot_session.extend(bot_usu_session)
+    session = session_finder(bot_session,message.chat.id)
+    if session != None:
+        if session.user.date_last != date.today():
+            session.user.date_last = date.today()
+        if session.select.stage == Stage.nameSelect.value:
+            asyncio.run(functional_name_selecter(session,message,person_list))
+        elif session.select.stage == Stage.thresholdSelect.value:
+            asyncio.run(functional_treshold_selecter(session,message.text))
+    else:
+        for i in admin_id_list:
+            if i == message.chat.id:
+                print(f"* new_user. name: {message.from_user.username};")
+                admin_adder(bot,bot_adm_session,message.chat.id,message.from_user.username)
+                bot_session.clear()
+                return None
+        print(f"* new_user. name: {message.from_user.username};")
+        user_adder(bot,bot_usu_session,message.chat.id,message.from_user.username)
+        bot_session.clear()
+        return None
+   #asyncio.run(functional_start_year_selecter(bot,message))
+bot.polling(none_stop=True)
