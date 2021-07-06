@@ -17,7 +17,7 @@ create table if not exists params
     start_year integer not null,
     end_year integer not null,
     threshold integer not null,
-    is_actor integer not null
+    is_actors integer not null
 );
 create table if not exists colleague
 (
@@ -48,28 +48,22 @@ create table  if not exists user_type
 create table  if not exists user
 (
     id integer primary key,
-    strat_date_use text not null,
+    start_date_use text not null,
     date_last_visit text not null,
     user_type_id number not null
         references user_type
 );
 create table if not exists req
 (
-    id integer not null,
+    id integer primary key,
     user_id integer not null
         references user,
     params_id integer not null
-        references params,
-    constraint req_pk
-        primary key (id, user_id)
+        references params
 );
 create table if not exists fav
 (
-    req_id integer not null
-        references req,
-    req_user_id integer not null
-        references req,
-    constraint fav_pk
-        primary key (req_id, req_user_id)
+    req_id integer primary key
+        references req
 );
 
