@@ -1,8 +1,4 @@
 import db.DBWork
-from db import DBWork
-from models.dataclasses.Person import Person
-from models.enums.Position import Position
-
 
 class DBHolder:  # TODO:  Stepa
     @staticmethod
@@ -14,26 +10,32 @@ class DBHolder:  # TODO:  Stepa
 
 
     @staticmethod
+    def get_genres():
+        return [] # ВОПРОС ЗАЧЕМ, есть енум
+
+
+    @staticmethod
     def add_person(personIN):  # person_id, full_name, photo_url
         if (db.DBWork.execute_query_to_return("select * from person where {0} = id".format(personIN.person_id)) == []):
-            db.DBWork.execute_query("insert into person (id, full_name, ) "
-                                    "values ({0},'{1}',{2}, {3})".format(personIN.person_id, personIN.full_name,
-                                                                         personIN.start_year, personIN.end_year))
+            db.DBWork.execute_query("insert into person (id, full_name, photo_url) "
+                                    "values ({0},'{1}',{2})".format(personIN.person_id, personIN.full_name,
+                                                                         personIN.photo_url))
 
 
     @staticmethod
-    def add_params(param):
-        pass
+    def add_params(params): #id, person_id, start_year, end_year, threshold, is_actor
+        if(db.DBWork.execute_query_to_return("select * from params where id = {0}".format(params.id)) == []):
+            db.DBWork.execute_query("insert into params (id, person_id, start_year, end_year, threshold, is_actor) "
+                            "values ({0}, {1}, {2}, {3}, {4}, {5})"
+                            .format(params.id, params.person_id, params.start_year, params.end_year, params.threshold, params.is_actor))
 
 
     @staticmethod
-    def add_relation(relation, params):
-        pass
+    def add_relation(relation, params): # RELATION: person_id1, person_id2, count_films PARAMS: id
+        if(db.DBWork.execute_query_to_return("select * from colleague where person_id1 = {0} and person_id1 = {1} and params_id = {2}"
+                                             .format(relation.first, relation.second, params.id)) == []):
+            pass
 
-
-    @staticmethod
-    def get_genres():
-        return []
 
 
     @staticmethod
@@ -64,10 +66,26 @@ class DBHolder:  # TODO:  Stepa
 
 
     @staticmethod
-    def add_user(user): #start_date_use add
+    def add_user_type(user_type):
         pass
 
 
     @staticmethod
-    def add_req():
+    def add_user(user): #start_date_use  - add
         pass
+
+
+    @staticmethod
+    def add_req(req):
+        pass
+
+
+    @staticmethod
+    def add_fav(req):
+        pass
+
+
+    @staticmethod
+    def remove_fav(req):
+        pass
+
