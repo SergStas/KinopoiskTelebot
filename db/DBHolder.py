@@ -32,9 +32,10 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def add_relation(relation, params): # RELATION: person_id1, person_id2, count_films PARAMS: id
-        if(db.DBWork.execute_query_to_return("select * from colleague where person_id1 = {0} and person_id1 = {1} and params_id = {2}"
+        if(db.DBWork.execute_query_to_return("select * from colleague where person_id1 = {0} and person_id2 = {1} and params_id = {2}"
                                              .format(relation.first, relation.second, params.id)) == []):
-            pass
+            db.DBWork.execute_query("insert into colleague (person_id1, person_id2, params_id, count_films) values "
+                                    "({0}, {1}, {2}, {3})".format(relation.first, relation.second, relation.weight, params.id))
 
 
 
