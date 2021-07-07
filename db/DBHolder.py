@@ -153,7 +153,7 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def show_req(user):
-        pass
+        return db.DBWork.execute_query_to_return("select * from req where user_id = {0}".format(user.user_id))
 
     @staticmethod
     def add_fav(req):  # user_id, params
@@ -178,7 +178,13 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def show_fav(user):
-        pass
+        all_req = db.DBWork.execute_query_to_return("select * from req where user_id = {0}".format(user.user_id))
+        result = []
+        for req in all_req:
+            f = db.DBWork.execute_query_to_return("select * from fav where req_id = {0}".format(req[0]))
+            if(f != []):
+                result.append(req)
+        return result
 
     @staticmethod
     def find_id_in_req(user_id, params_id):
