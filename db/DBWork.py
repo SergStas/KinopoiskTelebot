@@ -40,6 +40,7 @@ def execute_query_to_return(query):
         connection.commit()
     except Error as e:
         print(f"The error '{e}' occurred")
+        print(query)
     return cursor.fetchall()
 
 def relation_querry(query):

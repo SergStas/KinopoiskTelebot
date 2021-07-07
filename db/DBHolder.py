@@ -1,3 +1,5 @@
+import sys
+
 import db.DBWork
 
 
@@ -50,7 +52,7 @@ class DBHolder:  # TODO:  Stepa
         return db.DBWork.execute_query_to_return("select * from params where person_id = {0} and start_year = {1} "
                                                  "and end_year = {2} and threshold = {3} and is_actors = {4}"
                                                  .format(params.person_id, params.start_year, params.end_year,
-                                                         params.threshold, params.is_actors)) is not []
+                                                         params.threshold, params.is_actors)) != []
 
     @staticmethod
     def get_full(params):  # Relation[]
@@ -60,25 +62,31 @@ class DBHolder:  # TODO:  Stepa
 
     @staticmethod
     def is_part(params):  # boolean // все то же самое, кроме порога: существующий порог ниже требуемого
-        thr = int
+        #thr = sys.maxsize
+        result = sys.maxsize
         if (db.DBWork.execute_query_to_return("select * from params where person_id = {0} and start_year = {1} "
                                               "and end_year = {2} and is_actors = {3}"
                                                       .format(params.person_id, params.start_year, params.end_year,
                                                               params.is_actors)) != []):
             thr = DBHolder.find_theshold_in_params(params.person_id, params.start_year, params.end_year,
                                                    params.is_actors)
-        return thr < params.threshold ####################################################
+            if (type(thr) is type([])):
+                for t in thr:
+                    for m in t:
+                        if (params.threshold > m and (result < m or result == sys.maxsize)):
+                            result = m
+        return result < params.threshold
 
     @staticmethod
     def get_part(params):  # Relation[] // сохранение новых параметров, сохранение связей с новыми параметрами
         thr = DBHolder.find_theshold_in_params(params.person_id, params.start_year, params.end_year, params.is_actors)
-        id = DBHolder.find_id_in_params(params.person_id, params.start_year, params.end_year, thr, params.is_actors)
+        id = DBHolder.find_id_in_params(params.person_id, params.start_year, params.end_year, thr[0][0], params.is_actors)
         answer = db.DBWork.relation_querry("select * from colleague where params_id = {0}".format(id))
         result = []
         for r in answer:
-            if (r.weight >= params.threshold):
+            if (r.weight > params.threshold):
                 result.append(r)
-        return result ###################################################################
+        return result # какие новые параметры сохранять?
 
     @staticmethod
     def find_id_in_params(person_id, start_year, end_year, threshold, is_actors):
@@ -93,18 +101,25 @@ class DBHolder:  # TODO:  Stepa
     def find_theshold_in_params(person_id, start_year, end_year, is_actors):  # int
         return db.DBWork.execute_query_to_return("select threshold from params where person_id = {0} and start_year = {1} "
                                                  "and end_year = {2} and is_actors = {3}"
-                                                 .format(person_id, start_year, end_year, is_actors))[0][0]
+                                                 .format(person_id, start_year, end_year, is_actors))
 
     @staticmethod
     def get_min_threshold(params):  # int
         # поиск точно таких же параметров, но порог которых выше, возвращение наименьшего порога (то есть ближайшего);
         # если параметров таких вообще нет, то возвращает 0
         result = None
-        for t in DBHolder.find_theshold_in_params(params.person_id, params.start_year, params.end_year, params.is_actors):
-            result = min(t)
+        thr = DBHolder.find_theshold_in_params(params.person_id, params.start_year, params.end_year, params.is_actors)
+        if(type(thr) is type([])):
+            for t in thr:
+                for m in t:
+                    if(params.threshold < m and (result is None or result > m )):
+                        result = m
+
+        else:
+            result = thr
         if result is None:
             result = 0
-        return result ##################################################################################
+        return result
 
     @staticmethod
     def add_user_type(user_type):
@@ -137,6 +152,10 @@ class DBHolder:  # TODO:  Stepa
                 "insert into req (user_id, params_id) values ({0},{1})".format(req.user_id, params_id))
 
     @staticmethod
+    def show_req(user):
+        pass
+
+    @staticmethod
     def add_fav(req):  # user_id, params
         params_id = DBHolder.find_id_in_params(req.params.person_id, req.params.start_year, req.params.end_year,
                                                req.params.threshold, req.params.is_actors)
@@ -156,6 +175,10 @@ class DBHolder:  # TODO:  Stepa
             if (db.DBWork.execute_query_to_return("select * from fav where req_id = {0}"
                                                           .format(id)) != []):
                 db.DBWork.execute_query("delete from fav where req_id = {0}".format(id))
+
+    @staticmethod
+    def show_fav(user):
+        pass
 
     @staticmethod
     def find_id_in_req(user_id, params_id):
