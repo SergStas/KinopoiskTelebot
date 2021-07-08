@@ -1,6 +1,9 @@
 import sqlite3 as sq
 from sqlite3 import Error
+
+from models.dataclasses.Person import Person
 from models.dataclasses.Relation import Relation
+from models.dataclasses.User import User
 
 
 def create_connection(pathDB):  # pathDB - text
@@ -43,8 +46,8 @@ def execute_query_to_return(query):
         print(query)
     return cursor.fetchall()
 
-def relation_querry(query):
-    connection.row_factory = lambda cursor, row: Relation(row[0], row[1], row[2], row[3])
+def user_querry(query):
+    connection.row_factory = lambda cursor, row: User(row[0], row[1], row[2], row[3], row[4])
     cursor = connection.cursor()
     try:
         cursor.execute(query)
@@ -54,6 +57,16 @@ def relation_querry(query):
     connection.row_factory = lambda cursor, row: row
     return cursor.fetchall()
 
+def person_querry(query):
+    connection.row_factory = lambda cursor, row: Person(row[0], row[1], row[2])
+    cursor = connection.cursor()
+    try:
+        cursor.execute(query)
+        connection.commit()
+    except Error as e:
+        print(f"The error '{e}' occurred")
+    connection.row_factory = lambda cursor, row: row
+    return cursor.fetchall()
 
 tables = ['genre', 'person', 'params', 'colleague', 'params_genre', 'user_type', 'user', 'req', 'fav']
 
