@@ -1,9 +1,14 @@
 from db.DBHolder import DBHolder
-from graph.GraphGenerator import GraphGenerator
+from graph.GraphGenerator import Graph
 from network.NetworkModule import NetworkModule
 
 
 class KinopoiskBotController:
+    @staticmethod
+    def get_graph(params, progress_bar):
+        if (params.generate_gif is None) | (not params.generate_gif):
+            return KinopoiskBotController._process_single_graph(params, progress_bar)
+
     @staticmethod
     def get_persons_list(full_name):
         return NetworkModule.get_actors(full_name)
@@ -21,14 +26,9 @@ class KinopoiskBotController:
         return DBHolder.show_reqs(user)
 
     @staticmethod
-    def get_graph(params, progress_bar):
-        if (params.generate_gif is None) | (not params.generate_gif):
-            return KinopoiskBotController._process_single_graph(params, progress_bar)
-
-    @staticmethod
     def _process_single_graph(params, progress_bar):
         relations = KinopoiskBotController._get_relations(params, progress_bar)
-        return GraphGenerator.get_graph(params, relations)
+        return Graph(relations=relations, params=params)
 
     @staticmethod
     def _get_relations(params, progress_bar):

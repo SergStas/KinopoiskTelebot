@@ -23,7 +23,6 @@ def stroke_sectioner(stroke, point=""):
         point += " "
     return f"{point}{stroke}\n-----\n"
 
-
 # def user_mas_adder(bot, ids):
 #     name = "usu"
 #     count = 0

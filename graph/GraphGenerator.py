@@ -80,7 +80,6 @@ class Graph:
         """с position не плохо справляется и встроенная в networkx логика"""
         path = f'{Graph._path}graph{time.time()}.png'
         plt.savefig(path)  # График оборачивается в картинку
-        print('done')
         return GraphData(path, self.params)
 
     def frame_shot(self):  # Нарезка кадров от начала создания графа до создания последней вершины
