@@ -9,8 +9,20 @@ class KinopoiskBotController:
         return NetworkModule.get_actors(full_name)
 
     @staticmethod
+    def get_favorites(user):
+        return DBHolder.show_favs(user)
+
+    @staticmethod
+    def add_user(user):
+        DBHolder.add_user(user)
+
+    @staticmethod
+    def get_history(user):
+        return DBHolder.show_reqs(user)
+
+    @staticmethod
     def get_graph(params, progress_bar):
-        if (params.generate_gif is None) | (params.generate_gif == False):
+        if (params.generate_gif is None) | (not params.generate_gif):
             return KinopoiskBotController._process_single_graph(params, progress_bar)
 
     @staticmethod

@@ -7,11 +7,11 @@ class SeleniumSessionHandler:
     _root_link = "https://www.kinopoisk.ru"
 
     @staticmethod
-    def get_search_response(driver, params):
+    def get_search_response(driver, name):
         label2 = "kinopoisk-header-search-form-input__input"
         find = "search-form-submit-button__icon"
         show_all = ".//a[contains(text(),'показать')]"
-        driver.find_element_by_class_name(label2).send_keys(params.name)
+        driver.find_element_by_class_name(label2).send_keys(name)
         driver.find_element_by_class_name(find).click()
         driver.find_element_by_xpath(show_all).click()
         return driver.page_source
