@@ -80,6 +80,7 @@ class Graph:
         """с position не плохо справляется и встроенная в networkx логика"""
         path = f'{Graph._path}graph{time.time()}.png'
         plt.savefig(path)  # График оборачивается в картинку
+        print('done')
         return GraphData(path, self.params)
 
     def frame_shot(self):  # Нарезка кадров от начала создания графа до создания последней вершины
@@ -113,7 +114,8 @@ class Graph:
             images.append(imageio.imread(path))
 
         kargs = {'duration': 0.5}
-        imageio.mimsave(f'{Graph._path}movie.gif', images, **kargs)
+        imageio.mimsave(f'{Graph._path}movie{time.time()}.gif', images, **kargs)
+        print('done')
 
 
 # d = [["Иного букв актер Вася",2,2],[2,5,1], [5,3, 2],[1,9,3],[2,12, 2],[5,12,1], [6,3, 2],[29,9,3],[470,12, 2],
