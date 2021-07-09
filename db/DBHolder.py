@@ -7,7 +7,13 @@ from models.dataclasses.Relation import Relation
 class DBHolder:
     @staticmethod
     def get_genres():
-        return [row[0] for row in db.DBWork.execute_query_to_return(f'select name from genre')]
+        result = [row[0] for row in db.DBWork.execute_query_to_return('select name from genre')]
+        return result
+
+    @staticmethod
+    def get_genres_with_ids():
+        result = [(row[0], row[1]) for row in db.DBWork.execute_query_to_return('select id, name from genre')]
+        return result
 
     @staticmethod
     def add_genre(genre):
@@ -97,12 +103,13 @@ class DBHolder:
     @staticmethod
     def get_full(params):  # Relation[]
         result = []
-        id = DBHolder.find_id_in_params(params.person_id, params.start_year, params.end_year, params.threshold,
+        id = DBHolder.find_id_in_params(params.person.person_id, params.start_year, params.end_year, params.threshold,
                                         params.actors_only, params.rank, params.genres)
         rels = db.DBWork.execute_query_to_return("select * from colleague where params_id = {0}".format(id))
         for rel in rels:
-            person1 = db.DBWork.person_query("select * from person where id = {0}".format(rel[0]))
-            person2 = db.DBWork.person_query("select * from person where id = {0}".format(rel[1]))
+            person1 = db.DBWork.person_query("select * from person where id = {0}".format(rel[0]))[0]
+            print(person1)
+            person2 = db.DBWork.person_query("select * from person where id = {0}".format(rel[1]))[0]
             p = db.DBWork.execute_query_to_return("select * from params where id = {0}".format(rel[2]))
             result.append(Relation(person1, person2, rel[3], params))
         return result

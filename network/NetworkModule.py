@@ -2,6 +2,7 @@ import sys
 import time
 from bs4 import BeautifulSoup
 
+from models.dataclasses.Params import Params
 from models.dataclasses.Person import Person
 from models.dataclasses.Relation import Relation
 from network.SeleniumSessionHandler import SeleniumSessionHandler
@@ -35,6 +36,8 @@ class NetworkModule:
     def _parse_person(driver, url):
         driver.get(url)
         html = driver.page_source
+        if len(url.split('/sr/')) == 2:
+            url = url.split('/sr/')[0]
         person_id = url.split('/')[-1]
         if person_id == '':
             person_id = url.split('/')[-2]
@@ -46,18 +49,23 @@ class NetworkModule:
             pic_url = ''
         return Person(person_id=person_id, full_name=name, url=pic_url)
 
+
     @staticmethod
     def get_actors(name):
         time.sleep(3)
         session = RequestManager.get_current_session()
         html = SeleniumSessionHandler.get_search_response(session, name)
         soup = BeautifulSoup(html, 'html.parser')
-        hrefs = soup.find_all('a', {'data-type': 'person'})
+        block = soup.find('div', {'class': 'search_results'})
+        try:
+            hrefs = [i for i in block.find_all('a') if len(i.get('href').split('name')) != 1]
+        except:
+            return []
         urls = []
         for href in hrefs:
-            link = href.get('data-url')
+            link = href.get('href')
             urls.append(f'{NetworkModule._root_link}{link}')
-        urls = [link for link in urls if len(link.split('/')) == 5]
+        urls = list(set([link for link in urls if (len(link.split('name')) == 2) and (len(link.split('sr'))) == 2]))
         result = []
         for url in urls:
             result.append(NetworkModule._parse_person(session, url))
@@ -174,3 +182,12 @@ class NetworkModule:
                 continue
             result.append(Relation(first=params.person, second=person, weight=filtered_count, params=params))
         return result
+
+    @staticmethod
+    def get_person_by_id(person_id):
+        return NetworkModule._parse_person(RequestManager.get_current_session(),
+                                           f'{NetworkModule._root_link}/name/{person_id}')
+
+# for i in NetworkModule.get_relations(Params(Person(person_id=513, full_name=None, url=None), 1990, 2015,
+#                                             [], 6, 3, True, False, '9999', 1)):
+#     print(f'{i.second.full_name} - {i.weight}')
