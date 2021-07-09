@@ -12,8 +12,12 @@ from typing import AsyncContextManager
 from telebot.apihelper import delete_message
 from asyncio.subprocess import create_subprocess_shell
 
-# bot = telebot.TeleBot(os.environ["TOKEN"])
-bot = telebot.TeleBot("1840456562:AAEVs2Teifyfojb3ep_FctSburLggTHy_00")
+TOKEN = ""
+with open('security.txt', 'r') as fp:
+    data = fp.read()
+    TOKEN = data.split("\n")[0].split("=")[1]
+print(TOKEN)
+bot = telebot.TeleBot(TOKEN)
 
 def stroke_pointer(stroke,point="*"):
     return f"{point} {stroke}\n"
