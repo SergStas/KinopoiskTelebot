@@ -1,11 +1,52 @@
 import telebot
 import asyncio
 from enum import Enum, auto
+#####
+import datetime
+#####
+# from db.DBHolder import DBHolder
+# from models.dataclasses.Params import Params
+# from models.dataclasses.User import User
+# from models.enums.UserType import UserType
 
-from db.DBHolder import DBHolder
-from models.dataclasses.Params import Params
-from models.dataclasses.User import User
-from models.enums.UserType import UserType
+###############
+class UserType(Enum):
+    plain_user = 0
+    admin = 1
+    root = 2
+class Person:
+    def __init__(self, person_id, full_name, url):
+        self.person_id = person_id
+        self.full_name = full_name
+        self.url = url
+class Params:
+    def __init__(self, person=None, start_year=None, end_year=None, genres=None, threshold=None, rank=None,
+                 actors_only=None, generate_gif=None, name=None, step=None):
+        if genres is None:
+            genres = []
+        self.person = person
+        self.start_year = start_year
+        self.end_year = end_year
+        self.genres = genres
+        self.threshold = threshold
+        self.rank = rank
+        self.actors_only = actors_only
+        self.generate_gif = generate_gif
+        self.name = name
+        self.step = step
+class User:
+    def __init__(self, user_id, name, user_type,
+                 start_date_active=datetime.date.today(),
+                 last_date_active=datetime.date.today()):
+        self.user_id = user_id
+        self.name = name
+        self.start_date_active = start_date_active
+        self.last_date_active = last_date_active
+        self.user_type = user_type
+def get_graph(request):
+    if (request.generate_gif is None) | (request.generate_gif == False):
+        graph = _process_single_graph(request)
+###############
 
 with open('../security.txt', 'r') as fp:
     data = fp.read()
@@ -22,14 +63,6 @@ def stroke_sectioner(stroke, point=""):
     if point != "":
         point += " "
     return f"{point}{stroke}\n-----\n"
-
-
-# def user_mas_adder(bot, ids):
-#     name = "usu"
-#     count = 0
-#     for id in ids:
-#         session = Session(id, bot, f"{name}_{count}", False)
-#         count += 1
 
 
 # class User:
@@ -66,14 +99,6 @@ def stroke_sectioner(stroke, point=""):
 #         self.start_year = start_year
 #         self.end_year = end_year
 #         self.photo_url = photo_url
-
-
-# class Markups:
-#     def __init__(self):
-#         self.id = None
-#         self.body = None
-#         self.list = None
-#         self.index = None
 
 
 class Session:
@@ -369,7 +394,7 @@ class Messages:
     def markup_button_geter(self, arg_text, callback):
         return telebot.types.InlineKeyboardButton(text=arg_text, callback_data=callback)
 
-    def adm_firer(self, id):
+    def adm_firer(self,id):
         session = Session.finder(id)
         Session.adm_session.remove(session)
         Session.usu_session.append(session)
@@ -378,8 +403,7 @@ class Messages:
         if len(Session.adm_session) > 0:
             self.admins_geter()
         self.usu_info_geter(id)
-
-    def adm_assigner(self, id):
+    def adm_assigner(self,id):
         session = Session.finder(id)
         Session.usu_session.remove(session)
         Session.adm_session.append(session)
@@ -387,11 +411,18 @@ class Messages:
         self.markup_clear()
         self.users_geter()
         self.usu_info_geter(id)
-
-    def parms_favner(self, id):  # TODO
-        return None
-
-    def parms_repeater(self, id):  # TODO
+    def parms_favner(self,id): # TODO
+        parms = self.session.store[id]
+        self.session.favs.append(parms)
+        self.markup_clear()
+        self.store_geter()
+        self.info_clear()
+    def parms_refavner(self,id): # TODO
+        self.session.favs.pop(id)
+        self.markup_clear()
+        self.info_clear()
+        self.favs_geter()
+    def parms_repeater(self,id): # TODO
         return None
 
     def markup_geter(self):
@@ -797,7 +828,9 @@ class Messages:
             self.session.target = None
             self.other_message_sender("Запрос отправлен!")
             self.session.pauser()
+            prgress = Progress_bar()
             get_graph(self.session.parms,self.progress) #TODO
+            self.progress = self.message_sender(progress.bar)
         elif self.callback == "cancel":
             self.parms_clear()
             self.markup_clear()
@@ -885,7 +918,8 @@ class Messages:
             self.session.stage = self.session.stage_path.pop(0)
             self.callback = "begin"
 
-
+    def worker(self): # TODO
+        return None
 class Progress_bar:
     void = "▒"
     point = "█"
@@ -982,26 +1016,38 @@ def call_determenant(call):
         session.messages.parms_clear()
         session.messages.cron_targer(text)
     elif text == "usu_up":
-        session.messages.markup_list_rechanger("Список пользователей:", True, Session.usu_session, "usu")
+        session.messages.markup_list_rechanger("Список пользователей:",True,Session.usu_session,"usu")
     elif text == "adm_up":
-        session.messages.markup_list_rechanger("Список администратор:", True, Session.usu_session, "adm")
+        session.messages.markup_list_rechanger("Список администратор:",True,Session.usu_session,"adm")
+    elif text == "favs_up":
+        return None
     elif text == "usu_down":
-        session.messages.markup_list_rechanger("Список пользователей:", False, Session.usu_session, "usu")
+        session.messages.markup_list_rechanger("Список пользователей:",False,Session.usu_session,"usu")
     elif text == "adm_down":
-        session.messages.markup_list_rechanger("Список администратор:", False, Session.usu_session, "adm")
+        session.messages.markup_list_rechanger("Список администратор:",False,Session.usu_session,"adm")
     elif text == "store_up":
-        session.messages.markup_list_rechanger("Список запросов:", True, session.store, "store")
+        session.messages.markup_list_rechanger("Список запросов:",True,session.store,"store")
+    elif text == "favs_down":
+        return None
     elif text == "store down":
-        session.messages.markup_list_rechanger("Список запросов:", False, session.store, "store")
+        session.messages.markup_list_rechanger("Список запросов:",False,session.store,"store")
     elif text.find("usu_set") != -1:
-        session.messages.markup_list_changer(int(text.split("_")[2]), Session.usu_session, "usu")
+        session.messages.markup_list_changer(int(text.split("_")[2]),Session.usu_session,"usu")
     elif text.find("adm_set") != -1:
-        session.messages.markup_list_changer(int(text.split("_")[2]), Session.adm_session, "adm")
+        session.messages.markup_list_changer(int(text.split("_")[2]),Session.adm_session,"adm")
     elif text.find("fire_adm") != -1:
         session.messages.adm_firer(int(text.split("_")[2]))
+    elif text.find("favs_set") != -1:
+        session.messages.favs_info_geter(int(text.split("_")[2]))
+    elif text.find("favs_fair") != -1:
+        session.messages.parms_refavner(int(text.split("_")[2]))
     elif text.find("store_set") != -1:
-        session.messages.markup_list_changer(int(text.split("_")[2]), session.store, "store")
+       session.messages.markup_list_changer(int(text.split("_")[2]),session.store,"store") 
     elif text.find("assign_adm") != -1:
+        session.messages.adm_assigner(int(text.split("_")[2]))
+    elif text.find("store_choose") != -1:
+        session.messages.parms_favner(int(text.split("_")[2]))
+    elif text.find("store_repeat") != -1:
         session.messages.adm_assigner(int(text.split("_")[2]))
 
 
