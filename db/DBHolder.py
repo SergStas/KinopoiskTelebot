@@ -7,7 +7,7 @@ from models.dataclasses.Relation import Relation
 class DBHolder:
     @staticmethod
     def get_genres():
-        return []  # TODO
+        return [row[0] for row in db.DBWork.execute_query_to_return(f'select name from genre')]
 
     @staticmethod
     def add_genre(genre):
