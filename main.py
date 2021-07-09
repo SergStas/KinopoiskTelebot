@@ -2,6 +2,7 @@ import datetime
 
 import db.DBWork
 import db.DBWork as bd
+from controller.controller import KinopoiskBotController
 from db import DBWork
 from db.DBHolder import DBHolder as holder
 from models.dataclasses.Params import Params
@@ -15,7 +16,7 @@ from models.enums.UserType import UserType
 
 bd.start_bd()
 
-db.DBWork.delete_all_tables_values()
+# db.DBWork.delete_all_tables_values()
 
 holder.add_user_type(UserType.plain_user.name)
 holder.add_user_type(UserType.admin.name)
@@ -60,17 +61,19 @@ holder.add_fav(Req(20, a, '23122000'))
 holder.add_fav(Req(20, b, '12.12.46'))
 
 holder.remove_fav(Req(20, a, '23122000'))
-print(holder.has_params(Params(R, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)))
-print(holder.is_part(part))
-print(holder.get_min_threshold(a))
+# print(holder.has_params(Params(R, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)))
+# print(holder.is_part(part))
+# print(holder.get_min_threshold(a))
+#
+# for p in holder.get_part(part):
+#     print(p.first)
+#     print(p.second)
+#     print(p.weight)
+#     print(p.params)
+# print(holder.show_reqs(us1))
+# print(holder.show_favs(us1))
+# print(holder.show_favs(us1))
 
-for p in holder.get_part(part):
-    print(p.first)
-    print(p.second)
-    print(p.weight)
-    print(p.params)
-print(holder.show_reqs(us1))
-print(holder.show_favs(us1))
-print(holder.show_favs(us1))
+# DBWork.show_all_tables_values()
 
-DBWork.show_all_tables_values()
+KinopoiskBotController.get_graph(params=2, progress_bar=None)

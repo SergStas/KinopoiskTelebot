@@ -47,9 +47,10 @@ class NetworkModule:
         return Person(person_id=person_id, full_name=name, url=pic_url)
 
     @staticmethod
-    def get_actors(driver, params):
+    def get_actors(name):
         time.sleep(3)
-        html = SeleniumSessionHandler.get_search_response(driver, params)
+        session = RequestManager.get_current_session()
+        html = SeleniumSessionHandler.get_search_response(session, name)
         soup = BeautifulSoup(html, 'html.parser')
         hrefs = soup.find_all('a', {'data-type': 'person'})
         urls = []
@@ -59,7 +60,7 @@ class NetworkModule:
         urls = [link for link in urls if len(link.split('/')) == 5]
         result = []
         for url in urls:
-            result.append(NetworkModule._parse_person(driver, url))
+            result.append(NetworkModule._parse_person(session, url))
         return result
 
     @staticmethod
