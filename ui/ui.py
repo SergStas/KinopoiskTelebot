@@ -1,15 +1,17 @@
 import telebot
 import asyncio
-# from DBHolder import *
-from datetime import *
 from enum import Enum, auto
 
-TOKEN = ""
+from db.DBHolder import DBHolder
+from models.dataclasses.Params import Params
+from models.dataclasses.User import User
+from models.enums.UserType import UserType
+
 with open('../security.txt', 'r') as fp:
     data = fp.read()
-    TOKEN = data.split("\n")[0].split("=")[1]
-print(TOKEN)
-bot = telebot.TeleBot(TOKEN)
+    token = data.split("\n")[0].split("=")[1]
+print(token)
+bot = telebot.TeleBot(token)
 
 
 def stroke_pointer(stroke, point="*"):
@@ -22,56 +24,56 @@ def stroke_sectioner(stroke, point=""):
     return f"{point}{stroke}\n-----\n"
 
 
-def user_mas_adder(bot, ids):
-    name = "usu"
-    count = 0
-    for id in ids:
-        session = Session(id, bot, f"{name}_{count}", False)
-        count += 1
+# def user_mas_adder(bot, ids):
+#     name = "usu"
+#     count = 0
+#     for id in ids:
+#         session = Session(id, bot, f"{name}_{count}", False)
+#         count += 1
 
 
-class User:
-    def __init__(self, id, type, name):
-        if type == "usu" or type == "adm" or type == "bos":
-            self.id = id
-            self.type = type
-            self.name = name
-            self.last_date_use = date.today()
-            self.start_date_use = date.today()
-        else:
-            print("* err - Был указан несуществующий тип пользователя;")
+# class User:
+#     def __init__(self, id, type, name):
+#         if type == "usu" or type == "adm" or type == "bos":
+#             self.id = id
+#             self.type = type
+#             self.name = name
+#             self.last_date_use = date.today()
+#             self.start_date_use = date.today()
+#         else:
+#             print("* err - Был указан несуществующий тип пользователя;")
+#
+#
+# class Parms:
+#     def __init__(self):
+#         self.name = None
+#         self.rank = None
+#         self.step = None
+#         self.geners = []
+#         self.threshold = None
+#         self.end_year = None
+#         self.is_actors = None
+#         self.person_id = None
+#         self.start_year = None
+#         self.generate_gif = None
+#
+#
+# class Person:
+#     def __init__(self, person_id, person_type, full_name, positions, start_year, end_year, photo_url):
+#         self.person_id = person_id
+#         self.full_name = full_name
+#         self.positions = positions
+#         self.start_year = start_year
+#         self.end_year = end_year
+#         self.photo_url = photo_url
 
 
-class Parms:
-    def __init__(self):
-        self.name = None
-        self.rank = None
-        self.step = None
-        self.geners = []
-        self.threshold = None
-        self.end_year = None
-        self.is_actors = None
-        self.person_id = None
-        self.start_year = None
-        self.generate_gif = None
-
-
-class Person:
-    def __init__(self, person_id, person_type, full_name, positions, start_year, end_year, photo_url):
-        self.person_id = person_id
-        self.full_name = full_name
-        self.positions = positions
-        self.start_year = start_year
-        self.end_year = end_year
-        self.photo_url = photo_url
-
-
-class Markups:
-    def __init__(self):
-        self.id = None
-        self.body = None
-        self.list = None
-        self.index = None
+# class Markups:
+#     def __init__(self):
+#         self.id = None
+#         self.body = None
+#         self.list = None
+#         self.index = None
 
 
 class Session:
@@ -88,7 +90,7 @@ class Session:
         self.user = None
         self.store = []
         self.stage = None
-        self.parms = Parms()
+        self.parms = Params()
         self.target = None
         self.choosen = []
         self.messages = Messages(self)
@@ -106,7 +108,7 @@ class Session:
                     self.user = User(id, "adm", name)
                     Session.adm_session.append(self)
                     stroke = "Добро пожаловать, уважаемый администратор!"
-        if self.user == None:
+        if self.user is None:
             self.user = User(id, "usu", name)
             Session.usu_session.append(self)
             stroke = "Добро пожаловать, уважаемый пользователь!"
@@ -116,19 +118,19 @@ class Session:
             self.messages.help_geter()
             self.pauser()
             self.messages.func_geter()
-        if id == 1170650256:
-            parms = Parms()
-            parms.name = "Уилл Смит"
-            parms.rank = 2
-            parms.start_year = None
-            parms.end_year = None
-            parms.step = None
-            parms.geners = [1]
-            parms.threshold = 5
-            parms.is_actors = True
-            parms.person_id = 0
-            parms.generate_gif = False
-            self.store.append(parms)
+        # if id == 1170650256:
+        #     parms = Params()
+        #     parms.name = "Уилл Смит"
+        #     parms.rank = 2
+        #     parms.start_year = None
+        #     parms.end_year = None
+        #     parms.step = None
+        #     parms.geners = [1]
+        #     parms.threshold = 5
+        #     parms.is_actors = True
+        #     parms.person_id = 0
+        #     parms.generate_gif = False
+        #     self.store.append(parms)
 
     def finder(id):
         for i in Session.bos_session:
@@ -158,7 +160,7 @@ class Messages:
         self.index = None
         self.callback = None
         self.progress = None
-        self.parms = Parms()
+        self.parms = Params()
         self.markup = []
         self.session = session
         self.stage_list = []
@@ -190,7 +192,7 @@ class Messages:
             self.info.clear()
 
     def parms_clear(self):
-        self.session.parms = Parms()
+        self.session.parms = Params()
 
     def markup_clear(self):
         if len(self.markup) > 0:
@@ -225,7 +227,7 @@ class Messages:
 
     def help_geter(self):
         self.help_clear()
-        if self.session.user.type == "bos":
+        if self.session.user.user_type == UserType.admin:
             self.help_message_sender(
                 stroke_sectioner("Здесь вы можете ознакомиться со списком контрольных команд для данного бота:") +
                 stroke_pointer("/id - Указывает Ваш ID в Телеграмме;") +
@@ -241,7 +243,7 @@ class Messages:
                 stroke_pointer(
                     "Снять администратора с должности можно с помощью команды `fire_adm id` (где id - это ID пользователя в Телеграмме) или выбрав соответсвующий пункт в информации пользователя.")
             )
-        if self.session.user.type == "adm":
+        if self.session.user.user_type == UserType.admin:
             self.help_message_sender(
                 stroke_sectioner(
                     "Здесь вы можете ознакомиться с полным списком команд, для продвинутого взаимодействия с ботом:") +
@@ -282,6 +284,7 @@ class Messages:
     def person_geter(self, id):
         res = []
         person = None
+        person_list = []
         for i in person_list:
             if i.person_id == id:
                 person = i
@@ -335,7 +338,7 @@ class Messages:
         stroke += stroke_pointer(f"Глубина построения связи: {parms.rank};", "✫")
         stroke += stroke_pointer(f"Минимальное количество общих фильмов: {parms.threshold};", "✫")
         stroke += stroke_sectioner(f"Жанры:", "✫")
-        for i in Gener:
+        for i in DBHolder.get_genres():
             if parms.geners.count(i.value) > 0:
                 stroke += stroke_pointer(i.name)
         self.markup_clear()
@@ -399,10 +402,10 @@ class Messages:
         self.users_geter()
         self.usu_info_geter(id)
 
-    def parms_favner(self, id):
+    def parms_favner(self, id):  # TODO
         return None
 
-    def parms_repeater(self, id):
+    def parms_repeater(self, id):  # TODO
         return None
 
     def markup_geter(self):
@@ -629,6 +632,7 @@ class Messages:
             self.session.pauser()
             self.stage_massage_sender("Укажите полное имя искомой персоны:")
         else:
+            person_list = []  # TODO
             self.session.parms.person_id = []
             for i in person_list:
                 if i.full_name == self.callback:
@@ -718,7 +722,7 @@ class Messages:
             self.stage_message_clear()
             self.markup_clear()
             markup = self.markup_geter()
-            for i in Gener:
+            for i in DBHolder.get_genres():
                 markup.row(
                     self.markup_button_geter(f"{i.name}", f"gener_add_{i.value}"),
                     self.markup_button_geter("-", "none")
@@ -737,7 +741,7 @@ class Messages:
                 self.session.parms.geners.append(index)
             elif self.callback.find("gener_remove") != -1:
                 self.session.parms.geners.remove(index)
-            for i in Gener:
+            for i in DBHolder.get_genres():
                 if i.value in self.session.parms.geners:
                     markup.row(
                         self.markup_button_geter("-", "none"),
@@ -753,11 +757,11 @@ class Messages:
         elif self.callback == "done":
             stroke = stroke_sectioner("Указанные жанры:", "✫")
             if len(self.session.parms.geners) > 0:
-                for i in Gener:
+                for i in DBHolder.get_genres():
                     if i.value in self.session.parms.geners:
                         stroke += stroke_pointer(i.name)
             else:
-                for i in Gener:
+                for i in DBHolder.get_genres():
                     self.session.parms.geners.append(i.value)
                     stroke += stroke_pointer(i.name)
             self.markup_clear()
@@ -791,7 +795,7 @@ class Messages:
             stroke += stroke_pointer(f"Глубина построения связи: {self.session.parms.rank};", "✫")
             stroke += stroke_pointer(f"Минимальное количество общих фильмов: {self.session.parms.threshold};", "✫")
             stroke += stroke_sectioner(f"Жанры:", "✫")
-            for i in Gener:
+            for i in DBHolder.get_genres():
                 if self.session.parms.geners.count(i.value) > 0:
                     stroke += stroke_pointer(i.name)
             markup = self.markup_geter()
@@ -800,7 +804,7 @@ class Messages:
                 self.markup_button_geter("Отменить", "cancel")
             )
             self.markup.append(self.markup_sender(stroke, markup))
-        elif self.callback == "done":
+        elif self.callback == "done":  # TODO
             self.session.store.append(self.session.parms)
             self.parms_clear()
             self.markup_clear()
@@ -941,29 +945,29 @@ class Stage(Enum):
     startYearSelect = auto()
 
 
-class Gener(Enum):
-    Нуар = auto()
-    Экшен = auto()
-    Ужасы = auto()
-    Драма = auto()
-    Слэшер = auto()
-    Боевик = auto()
-    Мюзикл = auto()
-    Фэнтези = auto()
-    Военный = auto()
-    Комедия = auto()
-    Вестерн = auto()
-    Детский = auto()
-    Криминал = auto()
-    Детектив = auto()
-    Семейный = auto()
-    Мелодрама = auto()
-    Биография = auto()
-    Фантастика = auto()
-    Мультфильм = auto()
-    Спортивный = auto()
-    Исторический = auto()
-    Приключенческий = auto()
+# class Gener(Enum):
+#     Нуар = auto()
+#     Экшен = auto()
+#     Ужасы = auto()
+#     Драма = auto()
+#     Слэшер = auto()
+#     Боевик = auto()
+#     Мюзикл = auto()
+#     Фэнтези = auto()
+#     Военный = auto()
+#     Комедия = auto()
+#     Вестерн = auto()
+#     Детский = auto()
+#     Криминал = auto()
+#     Детектив = auto()
+#     Семейный = auto()
+#     Мелодрама = auto()
+#     Биография = auto()
+#     Фантастика = auto()
+#     Мультфильм = auto()
+#     Спортивный = auto()
+#     Исторический = auto()
+#     Приключенческий = auto()
 
 
 class Target(Enum):
@@ -973,46 +977,37 @@ class Target(Enum):
     person_films = auto()
 
 
-person_list = [
-    Person(0, "act", "Уилл Смит", 0, 1985, 2021, "http://nightclick.ucoz.ru/_pu/9/s58863132.jpg"),
-    Person(1, "act", "Вин Дизель", 1, 1980, 2021, "https://gif.cmtt.space/3/paper-media/7c/e9/70/8a6e9b24f617ad.jpg"),
-    Person(2, "act", "Скарлетт Йохансон", 2, 1920, 2021,
-           "https://i.pinimg.com/564x/c3/a6/a7/c3a6a7afed7067b05e4399e714e563c7.jpg"),
-    Person(3, "stf", "Уилл Смит", 3, 1920, 1977,
-           "https://www.meme-arsenal.com/memes/259343770ad19e1dd9e5abd07e9d5b16.jpg"),
-    Person(4, "act", "Джим Керри", 4, 1990, 2021,
-           "https://www.shmyandeks.ru/wp-content/uploads/2014/07/djim_kerri_1.jpg")
-]
+# testers_usu = [
+#     1170650255,
+#     1170650254,
+#     1170650253,
+#     1170650252,
+#     1170650251,
+#     1170650250,
+#     1170650249,
+#     1170650248,
+#     1170650247,
+#     1170650246,
+#     1170650245,
+#     1170650244,
+#     1170650243,
+#     1170650242,
+#     1170650241,
+#     1170650240,
+#     1170650239,
+#     1170650238,
+#     1170650237,
+#     1170650236,
+#     1170650235,
+#     1170650234,
+#     1170650233,
+#     1170650232,
+#     1170650231,
+#     1170650230
+# ]
 
-testers_usu = [
-    1170650255,
-    1170650254,
-    1170650253,
-    1170650252,
-    1170650251,
-    1170650250,
-    1170650249,
-    1170650248,
-    1170650247,
-    1170650246,
-    1170650245,
-    1170650244,
-    1170650243,
-    1170650242,
-    1170650241,
-    1170650240,
-    1170650239,
-    1170650238,
-    1170650237,
-    1170650236,
-    1170650235,
-    1170650234,
-    1170650233,
-    1170650232,
-    1170650231,
-    1170650230
-]
-user_mas_adder(bot, testers_usu)
+
+# user_mas_adder(bot, testers_usu)
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -1134,23 +1129,22 @@ def message_handler(message):
                     session.messages.cron_targer(text)
     else:
         session = Session(id, bot, name, True)
-    if text == "/test_date_markuper":
-        markup = Markups()
-        markup = markup.get_date_markuper()
-        bot.send_message(message.chat.id, "test", reply_markup=markup)
-    elif text == "/test_num_markuper":
-        markup = Markups()
-        bot.send_message(message.chat.id, "test", reply_markup=markup.get_num_markuper())
-    elif text == "/test_list_markuper":
-        markup = Markups()
-        markup.index = 0
-        bot.send_message(message.chat.id, "test", reply_markup=markup.get_list_markuper([1, 2, 5, 16, 20]))
-    elif text == "/test_progress":
-        session.messages.progress = Progress_bar(chat_id=id)
-        session.messages.progress.id = session.bot.send_message(id, session.messages.progress.bar).id
-        for i in range(100):
-            session.pauser(0.001)
-            session.messages.progress.adder()
-
+    # if text == "/test_date_markuper":
+    #     markup = Markups()
+    #     markup = markup.get_date_markuper()
+    #     bot.send_message(message.chat.id, "test", reply_markup=markup)
+    # elif text == "/test_num_markuper":
+    #     markup = Markups()
+    #     bot.send_message(message.chat.id, "test", reply_markup=markup.get_num_markuper())
+    # elif text == "/test_list_markuper":
+    #     markup = Markups()
+    #     markup.index = 0
+    #     bot.send_message(message.chat.id, "test", reply_markup=markup.get_list_markuper([1, 2, 5, 16, 20]))
+    # elif text == "/test_progress":
+    #     session.messages.progress = Progress_bar(chat_id=id)
+    #     session.messages.progress.id = session.bot.send_message(id, session.messages.progress.bar).id
+    #     for i in range(100):
+    #         session.pauser(0.001)
+    #         session.messages.progress.adder()
 
 bot.polling(none_stop=True)

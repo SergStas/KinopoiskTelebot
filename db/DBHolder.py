@@ -2,10 +2,13 @@ import sys
 import db.DBWork
 from models.dataclasses.Params import Params
 from models.dataclasses.Relation import Relation
-from models.enums.Genre import Genre
 
 
 class DBHolder:
+    @staticmethod
+    def get_genres():
+        return []  # TODO
+
     @staticmethod
     def add_genre(genre):
         if not db.DBWork.execute_query_to_return(f"select * from genre where name = '{genre}'"):

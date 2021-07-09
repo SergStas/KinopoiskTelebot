@@ -1,5 +1,8 @@
 class Params:
-    def __init__(self, person, start_year, end_year, genres, threshold, rank, actors_only, generate_gif, name, step):
+    def __init__(self, person=None, start_year=None, end_year=None, genres=None, threshold=None, rank=None,
+                 actors_only=None, generate_gif=None, name=None, step=None):
+        if genres is None:
+            genres = []
         self.person = person
         self.start_year = start_year
         self.end_year = end_year
