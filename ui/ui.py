@@ -99,17 +99,17 @@ class Session:
         stroke = ""
         for i in Session.bos_id_list:
             if i == id:
-                self.user = User(id, "bos", name)
+                self.user = User(id,name,UserType.root)
                 Session.bos_session.append(self)
                 stroke = "Добро пожаловать, уважаемый руководитель!"
         if self.user == None:
             for i in Session.adm_id_list:
                 if i == id:
-                    self.user = User(id, "adm", name)
+                    self.user = User(id,name,UserType.admin)
                     Session.adm_session.append(self)
                     stroke = "Добро пожаловать, уважаемый администратор!"
         if self.user is None:
-            self.user = User(id, "usu", name)
+            self.user = User(id,name,UserType.plain_user)
             Session.usu_session.append(self)
             stroke = "Добро пожаловать, уважаемый пользователь!"
         if intro:
@@ -118,20 +118,6 @@ class Session:
             self.messages.help_geter()
             self.pauser()
             self.messages.func_geter()
-        # if id == 1170650256:
-        #     parms = Params()
-        #     parms.name = "Уилл Смит"
-        #     parms.rank = 2
-        #     parms.start_year = None
-        #     parms.end_year = None
-        #     parms.step = None
-        #     parms.geners = [1]
-        #     parms.threshold = 5
-        #     parms.is_actors = True
-        #     parms.person_id = 0
-        #     parms.generate_gif = False
-        #     self.store.append(parms)
-
     def finder(id):
         for i in Session.bos_session:
             if i.id == id:
@@ -810,6 +796,8 @@ class Messages:
             self.markup_clear()
             self.session.target = None
             self.other_message_sender("Запрос отправлен!")
+            self.session.pauser()
+            get_graph(self.session.parms,self.progress) #TODO
         elif self.callback == "cancel":
             self.parms_clear()
             self.markup_clear()
@@ -944,71 +932,11 @@ class Stage(Enum):
     thresholdSelect = auto()
     startYearSelect = auto()
 
-
-# class Gener(Enum):
-#     Нуар = auto()
-#     Экшен = auto()
-#     Ужасы = auto()
-#     Драма = auto()
-#     Слэшер = auto()
-#     Боевик = auto()
-#     Мюзикл = auto()
-#     Фэнтези = auto()
-#     Военный = auto()
-#     Комедия = auto()
-#     Вестерн = auto()
-#     Детский = auto()
-#     Криминал = auto()
-#     Детектив = auto()
-#     Семейный = auto()
-#     Мелодрама = auto()
-#     Биография = auto()
-#     Фантастика = auto()
-#     Мультфильм = auto()
-#     Спортивный = auto()
-#     Исторический = auto()
-#     Приключенческий = auto()
-
-
 class Target(Enum):
     graf = auto()
     cron = auto()
     persons = auto()
     person_films = auto()
-
-
-# testers_usu = [
-#     1170650255,
-#     1170650254,
-#     1170650253,
-#     1170650252,
-#     1170650251,
-#     1170650250,
-#     1170650249,
-#     1170650248,
-#     1170650247,
-#     1170650246,
-#     1170650245,
-#     1170650244,
-#     1170650243,
-#     1170650242,
-#     1170650241,
-#     1170650240,
-#     1170650239,
-#     1170650238,
-#     1170650237,
-#     1170650236,
-#     1170650235,
-#     1170650234,
-#     1170650233,
-#     1170650232,
-#     1170650231,
-#     1170650230
-# ]
-
-
-# user_mas_adder(bot, testers_usu)
-
 
 @bot.callback_query_handler(func=lambda call: True)
 def call_determenant(call):
@@ -1129,22 +1057,5 @@ def message_handler(message):
                     session.messages.cron_targer(text)
     else:
         session = Session(id, bot, name, True)
-    # if text == "/test_date_markuper":
-    #     markup = Markups()
-    #     markup = markup.get_date_markuper()
-    #     bot.send_message(message.chat.id, "test", reply_markup=markup)
-    # elif text == "/test_num_markuper":
-    #     markup = Markups()
-    #     bot.send_message(message.chat.id, "test", reply_markup=markup.get_num_markuper())
-    # elif text == "/test_list_markuper":
-    #     markup = Markups()
-    #     markup.index = 0
-    #     bot.send_message(message.chat.id, "test", reply_markup=markup.get_list_markuper([1, 2, 5, 16, 20]))
-    # elif text == "/test_progress":
-    #     session.messages.progress = Progress_bar(chat_id=id)
-    #     session.messages.progress.id = session.bot.send_message(id, session.messages.progress.bar).id
-    #     for i in range(100):
-    #         session.pauser(0.001)
-    #         session.messages.progress.adder()
 
 bot.polling(none_stop=True)
