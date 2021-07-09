@@ -5,11 +5,15 @@ import re
 import telebot
 import asyncio
 import datetime
+from DBHolder import *
 from datetime import *
 from enum import Enum, auto
 from typing import AsyncContextManager
 from telebot.apihelper import delete_message
 from asyncio.subprocess import create_subprocess_shell
+
+# bot = telebot.TeleBot(os.environ["TOKEN"])
+bot = telebot.TeleBot("1840456562:AAEVs2Teifyfojb3ep_FctSburLggTHy_00")
 
 def stroke_pointer(stroke,point="*"):
     return f"{point} {stroke}\n"
@@ -126,8 +130,8 @@ class Session:
         for i in Session.usu_session:
             if i.id == id:
                 return i
-    def pauser(self):
-        asyncio.run(self.messages.pauser())
+    def pauser(self,sec=1):
+        asyncio.run(self.messages.pauser(sec=sec))
 class Messages:
     row_date = 5
     row_list = 15
@@ -140,6 +144,7 @@ class Messages:
         self.help = []
         self.index = None
         self.callback = None
+        self.progress = None
         self.parms = Parms()
         self.markup = []
         self.session = session
@@ -147,8 +152,8 @@ class Messages:
         self.other_list = []
         self.target_list = []
 
-    async def pauser(self):
-        await asyncio.sleep(1)
+    async def pauser(self,sec=1):
+        await asyncio.sleep(sec)
 
     def clear(self):
         if self.id != None:
@@ -235,6 +240,12 @@ class Messages:
             self.markup.append(self.markup_sender("Список пользователей:",self.markup_list_geter(Session.usu_session,"usu")))
         else:
             self.other_message_sender("Список пользователей пуст!")
+    def admins_geter(self):
+        self.markup_clear()
+        if len(Session.adm_session) > 0:
+            self.markup.append(self.markup_sender("Список администраторов:",self.markup_list_geter(Session.adm_session,"adm")))
+        else:
+            self.other_message_sender("Список администраторов пуст!")
     def person_geter(self,id):
         res = []
         person = None
@@ -245,12 +256,6 @@ class Messages:
         res.append(self.photo_sender(person.photo_url))
         res.append(self.message_sender(f"Годы деятельности: {person.start_year}-{person.end_year} Имя: {person.full_name};"))
         return res
-    def admins_geter(self):
-        self.markup_clear()
-        if len(Session.adm_session) > 0:
-            self.markup.append(self.markup_sender("Список администраторов:",self.markup_list_geter(Session.adm_session,"adm")))
-        else:
-            self.other_message_sender("Список администраторов пуст!")
     def usu_info_geter(self,id):
         usu = Session.finder(id).user
         stroke = stroke_sectioner(f"выбран пользователь `{usu.name}`:")
@@ -297,6 +302,7 @@ class Messages:
         for i in Gener:
             if parms.geners.count(i.value) > 0:
                 stroke += stroke_pointer(i.name)
+        self.markup_clear()
         markup = self.markup_geter()
         markup.row(self.markup_button_geter("Повторить",f"store_repeat_{id}"))
         markup.row(self.markup_button_geter("Избрать",f"store_choose_{id}"))
@@ -419,14 +425,14 @@ class Messages:
         markup = self.markup_list_geter(arg_list,prefix)
         self.markup_editer(text,markup)
 
+    def message_deleter(self,id):
+        self.session.bot.delete_message(self.session.id,id)
     def photo_sender(self,url):
         return self.session.bot.send_photo(self.session.id,url).id
     def message_sender(self,text):
         return self.session.bot.send_message(self.session.id,text).id
     def message_editer(self,id,arg_text):
         self.session.bot.edit_message_text(chat_id=self.session.id,message_id=id,text=arg_text)
-    def message_deleter(self,id):
-        self.session.bot.delete_message(self.session.id,id)
     def info_message_sender(self,text):
         self.info.append(self.message_sender(text))
     def help_message_sender(self,text):
@@ -515,75 +521,27 @@ class Messages:
         if self.session.stage == Stage.result.value:
             self.result_supplicanter()
 
-    def step_supplicanter(self):
+    def id_supplicanter(self):
         if self.callback == "begin":
-            self.markup_clear()
-            self.index = 1
-            self.markup.append(self.markup_sender(f"Укажите шаг продвижения по периоду: {self.index}",self.markup_num_geter()))
-        elif self.callback.find("add") != -1 or \
-            self.callback.find("inc") != -1:
-            num = int(self.callback.split("_")[1])
-            if self.callback.find("add") != -1:
-                self.index += num
-            elif self.callback.find("inc") != -1:
-                self.index -= num
-                if self.index <= 0:
-                    self.index += num
-                    return None
-            self.markup_editer(f"Укажите шаг продвижения по периоду: {self.index}",self.markup_num_geter())
-        elif self.callback == "done":
-            self.callback = "begin"
-            self.session.parms.step = self.index
-            self.index = None
-            self.session.stage = self.session.stage_path.pop(0)
-            self.markup_clear()
-            self.target_message_sender(stroke_pointer(f"Был указан шаг продвижения по периоду: {self.session.parms.step};","✫"))
-            self.callback = "begin"
             self.session.pauser()
-    def start_year_supplicanter(self):
-        if self.callback == "begin":
+            for i in range(len(self.session.parms.person_id)):
+                person = self.session.parms.person_id[i]
+                markup = self.markup_geter()
+                markup.row(self.markup_button_geter("Выбрать",f"set_pers_{person.person_id}"))
+                self.markup.append(self.photo_sender(person.photo_url))
+                self.markup.append(self.markup_sender(f"Годы деятельности: {person.start_year}-{person.end_year} Имя: {person.full_name};",markup))
+        elif self.callback.find("set_pers") != -1:
+            self.markup_clear()
             self.stage_message_clear()
-            self.markup_clear()
-            self.index = 0
-            self.markup.append(self.markup_sender("Укажите начало периода:",self.markup_date_geter()))
-        elif self.callback == "left" or self.callback == "right":
-            bias = Messages.row_date * Messages.column_date
-            if self.callback == "left":
-                self.index -= bias
-                if self.index + Messages.year_begin < Messages.year_begin:
-                    self.index += bias
-                    return None
-            elif self.callback == "right":
-                self.index += bias
-            self.markup_editer("Укажите начало периода:",self.markup_date_geter())
-        elif self.callback.find("set") != -1:
-            self.markup_clear()
-            self.session.parms.start_year = int(self.callback.split("_")[1])
-            self.target_message_sender(stroke_pointer(f"Было указано начало периода: {self.session.parms.start_year};","✫"))
-            self.session.stage = self.session.stage_path.pop(0)
-            self.callback = "begin"
-    def end_year_supplicanter(self):
-        if self.callback == "begin":
-            self.stage_message_clear()
-            self.markup_clear()
-            self.index = 0
-            self.markup.append(self.markup_sender("Укажите конец периода:",self.markup_date_geter()))
-        elif self.callback == "left" or self.callback == "right":
-            bias = Messages.row_date * Messages.column_date
-            if self.callback == "left":
-                self.index -= bias
-                if self.index + Messages.year_begin < Messages.year_begin:
-                    self.index += bias
-                    return None
-            elif self.callback == "right":
-                self.index += bias
-            self.markup_editer("Укажите конец периода:",self.markup_date_geter())
-        elif self.callback.find("set") != -1:
-            if self.session.parms.start_year > int(self.callback.split("_")[1]):
-                return None
-            self.markup_clear()
-            self.session.parms.end_year = int(self.callback.split("_")[1])
-            self.target_message_sender(stroke_pointer(f"Был указан конец периода: {self.session.parms.end_year};","✫"))
+            person = None
+            index = int(self.callback.split("_")[2])
+            for i in self.session.parms.person_id:
+                if i.person_id == index:
+                    person = i
+            self.session.parms.name = person.full_name
+            self.session.parms.person_id = person.person_id
+            self.target_message_sender(stroke_pointer("Была указана кино-персона:","✫"))
+            self.target_list.extend(self.person_geter(person.person_id))
             self.session.stage = self.session.stage_path.pop(0)
             self.callback = "begin"
     def type_supplicanter(self):
@@ -634,29 +592,58 @@ class Messages:
                 self.session.pauser()
                 self.target_message_sender("Попробуйте повторить попытку.")
             self.callback = "begin"
-    def id_supplicanter(self):
+    def step_supplicanter(self):
         if self.callback == "begin":
-            self.session.pauser()
-            for i in range(len(self.session.parms.person_id)):
-                person = self.session.parms.person_id[i]
-                markup = self.markup_geter()
-                markup.row(self.markup_button_geter("Выбрать",f"set_pers_{person.person_id}"))
-                self.markup.append(self.photo_sender(person.photo_url))
-                self.markup.append(self.markup_sender(f"Годы деятельности: {person.start_year}-{person.end_year} Имя: {person.full_name};",markup))
-        elif self.callback.find("set_pers") != -1:
             self.markup_clear()
-            self.stage_message_clear()
-            person = None
-            index = int(self.callback.split("_")[2])
-            for i in self.session.parms.person_id:
-                if i.person_id == index:
-                    person = i
-            self.session.parms.name = person.full_name
-            self.session.parms.person_id = person.person_id
-            self.target_message_sender(stroke_pointer("Была указана кино-персона:","✫"))
-            self.target_list.extend(self.person_geter(person.person_id))
-            self.session.stage = self.session.stage_path.pop(0)
+            self.index = 1
+            self.markup.append(self.markup_sender(f"Укажите шаг продвижения по периоду: {self.index}",self.markup_num_geter()))
+        elif self.callback.find("add") != -1 or \
+            self.callback.find("inc") != -1:
+            num = int(self.callback.split("_")[1])
+            if self.callback.find("add") != -1:
+                self.index += num
+            elif self.callback.find("inc") != -1:
+                self.index -= num
+                if self.index <= 0:
+                    self.index += num
+                    return None
+            self.markup_editer(f"Укажите шаг продвижения по периоду: {self.index}",self.markup_num_geter())
+        elif self.callback == "done":
             self.callback = "begin"
+            self.session.parms.step = self.index
+            self.index = None
+            self.session.stage = self.session.stage_path.pop(0)
+            self.markup_clear()
+            self.target_message_sender(stroke_pointer(f"Был указан шаг продвижения по периоду: {self.session.parms.step};","✫"))
+            self.callback = "begin"
+            self.session.pauser()
+    def rank_supplicanter(self):
+        if self.callback == "begin":
+            self.stage_message_clear()
+            self.markup_clear()
+            self.stage_massage_sender("Глубина построения связи позволяет продолжить формирование сети по отобранным ранее актёрам. При значении равном '1' мы получим только самого актёра, для '2' будут получены контакты с данной персоной, а для '3' - контакты их контактов. Рекомендуем вам проверить это на практике!")
+            self.session.pauser()
+            self.index = 1
+            self.markup.append(self.markup_sender(f"Укажите глубину построения связи: {self.index}",self.markup_num_geter()))
+        elif self.callback.find("add") != -1 or \
+            self.callback.find("inc") != -1:
+            num = int(self.callback.split("_")[1])
+            if self.callback.find("add") != -1:
+                self.index += num
+            elif self.callback.find("inc") != -1:
+                self.index -= num
+                if self.index <= 0:
+                    self.index += num
+                    return None
+            self.markup_editer(f"Укажите глубину построения связи: {self.index}",self.markup_num_geter())
+        elif self.callback == "done":
+            self.callback = "begin"
+            self.session.parms.rank = self.index
+            self.index = None
+            self.session.stage = self.session.stage_path.pop(0)
+            self.markup_clear()
+            self.target_message_sender(stroke_pointer(f"Была указана глубина построения связи: {self.session.parms.rank}","✫"))
+            self.session.pauser()
     def gener_supplicanter(self):
         if self.callback == "begin":
             self.session.pauser()
@@ -670,7 +657,6 @@ class Messages:
                 )
             markup.row(self.markup_button_geter("Принять","done"))
             self.markup.append(self.markup_sender("Укажите допустимые жанры:",markup))
-            self.session.pauser()
             self.stage_massage_sender(
                 stroke_pointer("Выбранные Вами жанры будут перемещены и расположены в правой части панели;") +
                 stroke_pointer("Жанры, оставшиеся слева будут отфильтрованы;") +
@@ -711,59 +697,6 @@ class Messages:
             self.target_message_sender(stroke)
             self.callback = "begin"
             self.session.stage = self.session.stage_path.pop(0)
-    def threshold_supplicanter(self):
-        if self.callback == "begin":
-            self.index = 1
-            self.markup_clear()
-            markup = self.markup_num_geter()
-            self.session.pauser()
-            self.markup.append(self.markup_sender(f"Укажите минимальное число общих фильмов данной персоны с другими кино-персонами: {self.index}",markup))
-        elif self.callback.find("add") != -1 or \
-            self.callback.find("inc") != -1:
-            num = int(self.callback.split("_")[1])
-            if self.callback.find("add") != -1:
-                self.index += num
-            elif self.callback.find("inc") != -1:
-                self.index -= num
-                if self.index <= 0:
-                    self.index += num
-                    return None
-            self.markup_editer(f"Укажите минимальное число общих фильмов данной персоны с другими кино-персонами: {self.index}",self.markup_num_geter())
-        elif self.callback == "done":
-            self.callback = "begin"
-            self.session.parms.threshold = self.index
-            self.index = None
-            self.session.stage = self.session.stage_path.pop(0)
-            self.markup_clear()
-            self.target_message_sender(stroke_pointer(f"Было указано пороговое значение общих фильмов: {self.session.parms.threshold}","✫"))
-            self.session.pauser()
-    def rank_supplicanter(self):
-        if self.callback == "begin":
-            self.stage_message_clear()
-            self.markup_clear()
-            self.stage_massage_sender("Глубина построения связи позволяет продолжить формирование сети по отобранным ранее актёрам. При значении равном '1' мы получим только самого актёра, для '2' будут получены контакты с данной персоной, а для '3' - контакты их контактов. Рекомендуем вам проверить это на практике!")
-            self.session.pauser()
-            self.index = 1
-            self.markup.append(self.markup_sender(f"Укажите глубину построения связи: {self.index}",self.markup_num_geter()))
-        elif self.callback.find("add") != -1 or \
-            self.callback.find("inc") != -1:
-            num = int(self.callback.split("_")[1])
-            if self.callback.find("add") != -1:
-                self.index += num
-            elif self.callback.find("inc") != -1:
-                self.index -= num
-                if self.index <= 0:
-                    self.index += num
-                    return None
-            self.markup_editer(f"Укажите глубину построения связи: {self.index}",self.markup_num_geter())
-        elif self.callback == "done":
-            self.callback = "begin"
-            self.session.parms.rank = self.index
-            self.index = None
-            self.session.stage = self.session.stage_path.pop(0)
-            self.markup_clear()
-            self.target_message_sender(stroke_pointer(f"Была указана глубина построения связи: {self.session.parms.rank}","✫"))
-            self.session.pauser()
     def result_supplicanter(self):
         if self.callback == "begin":
             self.markup_clear()
@@ -809,6 +742,106 @@ class Messages:
             self.markup_clear()
             self.session.target = None
             self.other_message_sender("Запрос отменен!")
+    def end_year_supplicanter(self):
+        if self.callback == "begin":
+            self.stage_message_clear()
+            self.markup_clear()
+            self.index = 0
+            self.markup.append(self.markup_sender("Укажите конец периода:",self.markup_date_geter()))
+        elif self.callback == "left" or self.callback == "right":
+            bias = Messages.row_date * Messages.column_date
+            if self.callback == "left":
+                self.index -= bias
+                if self.index + Messages.year_begin < Messages.year_begin:
+                    self.index += bias
+                    return None
+            elif self.callback == "right":
+                self.index += bias
+            self.markup_editer("Укажите конец периода:",self.markup_date_geter())
+        elif self.callback.find("set") != -1:
+            if self.session.parms.start_year > int(self.callback.split("_")[1]):
+                return None
+            self.markup_clear()
+            self.session.parms.end_year = int(self.callback.split("_")[1])
+            self.target_message_sender(stroke_pointer(f"Был указан конец периода: {self.session.parms.end_year};","✫"))
+            self.session.stage = self.session.stage_path.pop(0)
+            self.callback = "begin"
+    def threshold_supplicanter(self):
+        if self.callback == "begin":
+            self.index = 1
+            self.markup_clear()
+            markup = self.markup_num_geter()
+            self.session.pauser()
+            self.markup.append(self.markup_sender(f"Укажите минимальное число общих фильмов данной персоны с другими кино-персонами: {self.index}",markup))
+        elif self.callback.find("add") != -1 or \
+            self.callback.find("inc") != -1:
+            num = int(self.callback.split("_")[1])
+            if self.callback.find("add") != -1:
+                self.index += num
+            elif self.callback.find("inc") != -1:
+                self.index -= num
+                if self.index <= 0:
+                    self.index += num
+                    return None
+            self.markup_editer(f"Укажите минимальное число общих фильмов данной персоны с другими кино-персонами: {self.index}",self.markup_num_geter())
+        elif self.callback == "done":
+            self.callback = "begin"
+            self.session.parms.threshold = self.index
+            self.index = None
+            self.session.stage = self.session.stage_path.pop(0)
+            self.markup_clear()
+            self.target_message_sender(stroke_pointer(f"Было указано пороговое значение общих фильмов: {self.session.parms.threshold}","✫"))
+            self.session.pauser()
+    def start_year_supplicanter(self):
+        if self.callback == "begin":
+            self.stage_message_clear()
+            self.markup_clear()
+            self.index = 0
+            self.markup.append(self.markup_sender("Укажите начало периода:",self.markup_date_geter()))
+        elif self.callback == "left" or self.callback == "right":
+            bias = Messages.row_date * Messages.column_date
+            if self.callback == "left":
+                self.index -= bias
+                if self.index + Messages.year_begin < Messages.year_begin:
+                    self.index += bias
+                    return None
+            elif self.callback == "right":
+                self.index += bias
+            self.markup_editer("Укажите начало периода:",self.markup_date_geter())
+        elif self.callback.find("set") != -1:
+            self.markup_clear()
+            self.session.parms.start_year = int(self.callback.split("_")[1])
+            self.target_message_sender(stroke_pointer(f"Было указано начало периода: {self.session.parms.start_year};","✫"))
+            self.session.stage = self.session.stage_path.pop(0)
+            self.callback = "begin"
+
+class Progress_bar:
+    void = "▒"
+    point = "█"
+    left_limit = "﴾" 
+    right_limit = "﴿"
+    progress_point = 10
+    progress_procent = 100
+    def __init__(self,id=None,chat_id=None):
+        self.id = None
+        self.bot = bot
+        self.point = 0
+        self.chat_id = chat_id
+        self.progress = 0
+        self.bar = f"{Progress_bar.left_limit}{Progress_bar.point * self.point}{Progress_bar.void * (Progress_bar.progress_point - self.point)}{Progress_bar.right_limit}{self.progress}%"
+    def progresser(self):
+        self.bar = f"{Progress_bar.left_limit}{Progress_bar.point * self.point}{Progress_bar.void * (Progress_bar.progress_point - self.point)}{Progress_bar.right_limit}{self.progress}%"
+    def adder(self,add=1):
+        for i in range(add):
+            self.progress += 1
+            if self.progress > 100:
+                break
+            if self.progress%(Progress_bar.progress_procent/Progress_bar.progress_point) == 0 and self.progress != 0:
+                self.point += 1
+        self.progresser()
+        self.bot.edit_message_text(chat_id=self.chat_id,message_id=self.id,text=self.bar)
+    def ender(self):
+        self.adder(add=100-self.progress)
 
 class Stage(Enum):
     result = auto()
@@ -849,8 +882,6 @@ class Target(Enum):
     cron = auto()
     persons = auto()
     person_films = auto()
-
-bot = telebot.TeleBot(os.environ["TOKEN"])
 
 person_list = [
     Person(0,"act","Уилл Смит",0,1985,2021,"http://nightclick.ucoz.ru/_pu/9/s58863132.jpg"),
@@ -1005,15 +1036,21 @@ def message_handler(message):
                     session.messages.cron_targer(text)
     else:
         session = Session(id,bot,name,True)
-    if message.text == "/test_date_markuper":
+    if text == "/test_date_markuper":
         markup = Markups()
         markup = markup.get_date_markuper()
         bot.send_message(message.chat.id,"test",reply_markup=markup)
-    elif message.text == "/test_num_markuper":
+    elif text == "/test_num_markuper":
         markup = Markups()
         bot.send_message(message.chat.id,"test",reply_markup=markup.get_num_markuper())
-    elif message.text == "/test_list_markuper":
+    elif text == "/test_list_markuper":
         markup = Markups()
         markup.index = 0
         bot.send_message(message.chat.id,"test",reply_markup=markup.get_list_markuper([1,2,5,16,20]))
+    elif text == "/test_progress":
+        session.messages.progress = Progress_bar(chat_id=id)
+        session.messages.progress.id = session.bot.send_message(id,session.messages.progress.bar).id
+        for i in range(100):
+            session.pauser(0.001)
+            session.messages.progress.adder()
 bot.polling(none_stop=True)
