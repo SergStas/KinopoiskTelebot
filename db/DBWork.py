@@ -27,7 +27,7 @@ def start_bd():
 
 
 def execute_query(query):
-    #connection.row_factory = lambda cursor, row: row[0]
+    # connection.row_factory = lambda cursor, row: row[0]
     cursor = connection.cursor()
     try:
         cursor.execute(query)
@@ -35,6 +35,7 @@ def execute_query(query):
     except Error as e:
         print(f"The error '{e}' occurred")
         print(query)
+
 
 def execute_query_to_return(query):
     cursor = connection.cursor()
@@ -45,6 +46,7 @@ def execute_query_to_return(query):
         print(f"The error '{e}' occurred")
         print(query)
     return cursor.fetchall()
+
 
 def user_querry(query):
     connection.row_factory = lambda cursor, row: User(row[0], row[1], row[2], row[3], row[4])
@@ -57,7 +59,8 @@ def user_querry(query):
     connection.row_factory = lambda cursor, row: row
     return cursor.fetchall()
 
-def person_querry(query):
+
+def person_query(query):
     connection.row_factory = lambda cursor, row: Person(row[0], row[1], row[2])
     cursor = connection.cursor()
     try:
@@ -68,6 +71,7 @@ def person_querry(query):
     connection.row_factory = lambda cursor, row: row
     return cursor.fetchall()
 
+
 tables = ['genre', 'person', 'params', 'colleague', 'params_genre', 'user_type', 'user', 'req', 'fav']
 
 
@@ -76,7 +80,7 @@ def show_all_tables_values():
     for table in tables:
         print(table)
         for row in cursor.execute('SELECT * FROM "{0}"'.format(table)):
-            print(row)
+            print(f'\t{row}')
 
 
 def delete_all_tables_values():

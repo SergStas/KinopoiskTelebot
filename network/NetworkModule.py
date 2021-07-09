@@ -146,6 +146,8 @@ class NetworkModule:
 
     @staticmethod
     def get_part(upper, params):
+        if upper == 0:
+            upper = sys.maxsize
         html = RequestManager.request(f'{NetworkModule._root_link}/name/{params.person.person_id}/relations/')
         soup = BeautifulSoup(html, 'html.parser')
         rows = [a.parent.parent for a in soup.find_all('a') if len(a.text.split('фильмов:')) == 2]
