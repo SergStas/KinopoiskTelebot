@@ -119,6 +119,12 @@ class Messages:
             self.message_deleter(self.id)
         self.help_clear()
         self.markup_clear()
+        if self.progress != None:
+            self.message_deleter(self.progress.id)
+            self.progress = None
+        self.stage_message_clear()
+        self.other_message_clear()
+        self.target_message_clear()
 
     def all_clear(self):
         return None
