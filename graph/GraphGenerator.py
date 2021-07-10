@@ -96,6 +96,7 @@ class Chart:
         x = [i.date for i in visit_data]
         y = [i.count for i in visit_data]
         plt.plot(x, y, label='График посещения бота')
+        plt.xticks(rotation=90)
         plt.legend()
         plt.tight_layout()
         path = f'{Chart._path}chart{current_thread().name}.png'

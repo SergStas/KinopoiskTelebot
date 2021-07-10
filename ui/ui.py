@@ -1,5 +1,6 @@
 import asyncio
 from enum import Enum, auto
+from threading import Thread
 
 import telebot
 from controller.controller import KinopoiskBotController
@@ -372,7 +373,7 @@ class Messages:
     def visits_stats_geter(self):
         self.other_message_sender("Статистика посещаемости:")
         self.session.pauser()
-        self.session.other_list.append(self,send_photo_path(get_visits()))
+        self.other_list.append(self.send_photo_path(KinopoiskBotController.get_visits()))
 
     def markup_button_geter(self, arg_text, callback):
         return telebot.types.InlineKeyboardButton(text=arg_text, callback_data=callback)
@@ -664,7 +665,11 @@ class Messages:
             self.session.pauser()
             self.stage_massage_sender("Укажите полное имя искомой персоны:")
         else:
+            self.progress = Progress_bar(self.session.id, self.session)
+            self.progress.id = self.message_sender(self.progress.pos)
+            self.progress.start()
             person_list = NetworkModule.get_actors(self.callback)
+            self.progress.ender()
             self.session.parms.person_id = []
             for i in person_list:
                 # if i.full_name.lower() == self.callback.lower():
@@ -839,8 +844,6 @@ class Messages:
             )
             self.markup.append(self.markup_sender(stroke, markup))
         elif self.callback == "done":
-            progress = Progress_bar()
-            self.progress = self.message_sender(progress.bar)
             result = self.worker()
             params = self.session.parms.person_id
             # params.person = self.session.parms.person_id
@@ -944,16 +947,17 @@ class Messages:
             i = params.person.person_id
         except:
             params.person = NetworkModule.get_person_by_id(params.person_id)
+        self.progress = Progress_bar(self.session.id, self.session)
+        self.progress.id = self.message_sender(self.progress.pos)
+        self.progress.start()
         result = KinopoiskBotController.get_graph(self.session.parms, self.progress, self.session.id)
         if not params.generate_gif:
             self.other_message_sender("Результат:")
             self.other_list.append(self.send_photo_path(result.path))
         if params.generate_gif:
             self.other_message_sender("Результат:")
-            self.other_list.append(self.session.bot.send_animation(self.session.id,open(result.path,"rb")).id)
-        self.progress = Progress_bar()
-        self.progress.id = self.message_sender(self.progress.pos)
-        self.progress.animater()
+            self.other_list.append(self.session.bot.send_animation(self.session.id, open(result.path, "rb")).id)
+        self.progress.ender()
         return result
 
 
@@ -967,6 +971,10 @@ class Progress_bar:
         self.session = session
         self.pos = Progress_bar.value1
         self.cont = True
+
+    def start(self):
+        Thread(target=self.animater).start()
+
     def animater(self):
         while self.cont:
             if self.pos == Progress_bar.value1:
