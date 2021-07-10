@@ -692,8 +692,8 @@ class Messages:
             person_list = NetworkModule.get_actors(self.callback)
             self.session.parms.person_id = []
             for i in person_list:
-                if i.full_name.lower() == self.callback.lower():
-                    self.session.parms.person_id.append(i)
+                # if i.full_name.lower() == self.callback.lower():
+                self.session.parms.person_id.append(i)
             len_list = len(self.session.parms.person_id)
             if len_list > 1:
                 self.stage_massage_sender("Найдено множество соответсвий:")
@@ -817,7 +817,7 @@ class Messages:
             if len(self.session.parms.genres) > 0:
                 for i in DBHolder.get_genres_with_ids():
                     if i[0] in self.session.parms.genres:
-                        stroke += stroke_pointer(i)
+                        stroke += stroke_pointer(i[1])
             else:
                 self.session.parms.genres = []
                 # for i in DBHolder.get_genres():
@@ -964,6 +964,7 @@ class Messages:
 
     def worker(self):
         params = self.session.parms
+        params.genres = [e[1] for e in DBHolder.get_genres_with_ids() if e[0] in params.genres]
         try:
             i = params.person.person_id
         except:

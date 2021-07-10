@@ -11,6 +11,10 @@ from network.SeleniumSessionHandler import SeleniumSessionHandler
 
 class KinopoiskBotController:
     @staticmethod
+    def get_visits():
+        return 'url'
+
+    @staticmethod
     def init():
         DBWork.start_bd()
 
@@ -86,13 +90,16 @@ class KinopoiskBotController:
             print('post-loading starts...')
             old = params.threshold
             params.threshold = existing_threshold
-            db_part = DBHolder.get_full(params)
-            params.threshold = old
-            post_loaded_part = \
-                KinopoiskBotController._get_relations_from_net(params, progress_bar, existing_threshold)
-            DBHolder.add_params(params)
             g = params.genres
             params.genres = g if len(params.genres) > 0 else DBHolder.get_genres()
+            db_part = DBHolder.get_full(params)
+            params.threshold = old
+            params.genres = g
+            post_loaded_part = \
+                KinopoiskBotController._get_relations_from_net(params, progress_bar, existing_threshold)
+            g = params.genres
+            params.genres = g if len(params.genres) > 0 else DBHolder.get_genres()
+            DBHolder.add_params(params)
             for rel in post_loaded_part:
                 DBHolder.add_person(rel.second)
                 DBHolder.add_relation(rel)

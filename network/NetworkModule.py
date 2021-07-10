@@ -101,6 +101,8 @@ class NetworkModule:
                          if (len(i.get('href').split('navigator')) == 2) & (len(i.get('href').split('country')) == 1) &
                          (len([int(s) for s in i.get('href').split('/') if s.isdigit()]) == 0)]
         for genre in genres:
+            print(genre)
+            print(actual_genres)
             if genre.lower() in [s.lower() for s in actual_genres]:
                 return True
         return False
@@ -181,7 +183,7 @@ class NetworkModule:
 
     @staticmethod
     def get_person_by_id(person_id):
-        print(f'{NetworkModule._root_link}/name/{person_id}')
+        # print(f'{NetworkModule._root_link}/name/{person_id}')
         return NetworkModule._parse_person(RequestManager.get_current_session(),
                                            f'{NetworkModule._root_link}/name/{person_id}')
 
