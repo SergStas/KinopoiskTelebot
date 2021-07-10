@@ -1,7 +1,9 @@
 import sys
 import db.DBWork
 from models.dataclasses.Params import Params
+from models.dataclasses.Person import Person
 from models.dataclasses.Relation import Relation
+from models.dataclasses.Req import Req
 
 
 class DBHolder:
@@ -28,10 +30,12 @@ class DBHolder:
 
     @staticmethod
     def add_params(params):
-        par = db.DBWork.execute_query_to_return(f"select * from params where person_id = {params.person.person_id} "
-                                                f"and start_year = {params.start_year} and end_year = {params.end_year}"
-                                                f" and threshold = {params.threshold} "
-                                                f"and is_actors = {params.actors_only} and rank = {params.rank}")
+        str_start = params.start_year if params.start_year is not None else -1
+        str_end = params.end_year if params.end_year is not None else -1
+        str_act = params.actors_only if params.actors_only is not None else 'null'
+        par = DBHolder.__get_params(params)
+        # genres = params.genres if len(params.genres) > 0 else [e[0] for e in
+        #                                                        db.DBWork.execute_query_to_return('select * from genre')]
         all_same = True
         if par:
             for p in par:
@@ -39,15 +43,10 @@ class DBHolder:
         if par == [] or not all_same:
             db.DBWork.execute_query("insert into params (person_id, start_year, end_year, threshold, is_actors, rank) "
                                     "values ({0}, {1}, {2}, {3}, {4}, {5})"
-                                    .format(params.person.person_id, params.start_year, params.end_year,
+                                    .format(params.person.person_id, str_start, str_end,
                                             params.threshold,
-                                            params.actors_only, params.rank))
-            params_id = \
-                db.DBWork.execute_query_to_return("select id from params where person_id = {0} and start_year = {1} "
-                                                  "and end_year = {2} and threshold = {3} and is_actors = {4} and "
-                                                  "rank = {5}"
-                                                  .format(params.person.person_id, params.start_year, params.end_year,
-                                                          params.threshold, params.actors_only, params.rank))[0][0]
+                                            str_act, params.rank))
+            params_id = DBHolder.__get_params(params)[0][0]
             for genre in params.genres:
                 g_id = db.DBWork.execute_query_to_return("select id from genre where name = '{0}'".format(genre))
                 if not g_id:
@@ -60,6 +59,16 @@ class DBHolder:
                                             .format(g_id[0][0], params_id))
 
     @staticmethod
+    def __get_params(params):
+        str_start = params.start_year if params.start_year is not None else -1
+        str_end = params.end_year if params.end_year is not None else -1
+        str_act = params.actors_only if params.actors_only is not None else -1
+        return db.DBWork.execute_query_to_return(f"select * from params where person_id = {params.person.person_id} "
+                                                 f"and start_year = {str_start} and end_year = {str_end}"
+                                                 f" and threshold = {params.threshold} "
+                                                 f"and is_actors = {str_act} and rank = {params.rank}")
+
+    @staticmethod
     def equals_genres_list(p_id1, g2):
         genres = db.DBWork.execute_query_to_return(
             "select g.name from params_genre p join genre g on p.genre_id = g.id "
@@ -69,10 +78,7 @@ class DBHolder:
 
     @staticmethod
     def add_relation(relation):
-        params_id = DBHolder.find_id_in_params(relation.params.person.person_id, relation.params.start_year,
-                                               relation.params.end_year,
-                                               relation.params.threshold, relation.params.actors_only,
-                                               relation.params.rank, relation.params.genres)
+        params_id = DBHolder.find_id_in_params(relation.params)
         if (db.DBWork.execute_query_to_return(
                 "select * from colleague where person_id1 = {0} and person_id2 = {1} and params_id = {2}"
                         .format(relation.first.person_id, relation.second.person_id, params_id)) == []):
@@ -87,11 +93,7 @@ class DBHolder:
 
     @staticmethod
     def has_params(params):
-        par_exists = db.DBWork.execute_query_to_return(
-            "select * from params where person_id = {0} and start_year = {1} "
-            "and end_year = {2} and threshold = {3} and is_actors = {4} and rank = {5}"
-                .format(params.person.person_id, params.start_year, params.end_year,
-                        params.threshold, params.actors_only, params.rank))
+        par_exists = DBHolder.__get_params(params)
         if not par_exists:
             return False
         else:
@@ -103,12 +105,10 @@ class DBHolder:
     @staticmethod
     def get_full(params):  # Relation[]
         result = []
-        id = DBHolder.find_id_in_params(params.person.person_id, params.start_year, params.end_year, params.threshold,
-                                        params.actors_only, params.rank, params.genres)
+        id = DBHolder.find_id_in_params(params)
         rels = db.DBWork.execute_query_to_return("select * from colleague where params_id = {0}".format(id))
         for rel in rels:
             person1 = db.DBWork.person_query("select * from person where id = {0}".format(rel[0]))[0]
-            print(person1)
             person2 = db.DBWork.person_query("select * from person where id = {0}".format(rel[1]))[0]
             p = db.DBWork.execute_query_to_return("select * from params where id = {0}".format(rel[2]))
             result.append(Relation(person1, person2, rel[3], params))
@@ -117,15 +117,11 @@ class DBHolder:
     @staticmethod
     def is_part(params):
         result = sys.maxsize
-        par = db.DBWork.execute_query_to_return("select * from params where person_id = {0} and start_year = {1} "
-                                                "and end_year = {2} and is_actors = {3} and rank = {4}"
-                                                .format(params.person.person_id, params.start_year, params.end_year,
-                                                        params.actors_only, params.rank))
+        par = DBHolder.__get_params(params)
         if not par:
             return False
         else:
-            thr = DBHolder.find_threshold_in_params(params.person.person_id, params.start_year, params.end_year,
-                                                    params.actors_only, params.rank, params.genres)
+            thr = DBHolder.find_threshold_in_params(params)
             for t in thr:
                 if params.threshold > t and (result < t or result == sys.maxsize):
                     result = t
@@ -133,12 +129,8 @@ class DBHolder:
 
     @staticmethod
     def get_part(params):  # Relation[]
-        thr = DBHolder.find_threshold_in_params(params.person.person_id, params.start_year, params.end_year,
-                                                params.actors_only,
-                                                params.rank, params.genres)[0]
-        id = DBHolder.find_id_in_params(params.person.person_id, params.start_year, params.end_year, thr,
-                                        params.actors_only,
-                                        params.rank, params.genres)
+        thr = DBHolder.find_threshold_in_params(params)[0]
+        id = DBHolder.find_id_in_params(params)
         answer = db.DBWork.execute_query_to_return("select * from colleague where params_id = {0}".format(id))
         result = []
         for r in answer:
@@ -152,24 +144,23 @@ class DBHolder:
         return result
 
     @staticmethod
-    def find_id_in_params(person_id, start_year, end_year, threshold, is_actors, rank, genres):
-        ids = db.DBWork.execute_query_to_return("select id from params where person_id = {0} and start_year = {1} "
-                                                "and end_year = {2} and threshold = {3} and is_actors = {4} and rank = {5}"
-                                                .format(person_id, start_year, end_year, threshold, is_actors, rank))
-        result = int
+    def find_id_in_params(params):
+        ids = DBHolder.__get_params(params)
+        # genres = params.genres if len(params.genres) != 0 else [e[0] for e in
+        #                                                         db.DBWork.execute_query_to_return(
+        #                                                             'select id from genre')]
+        result = None
         for id in ids:
-            if DBHolder.equals_genres_list(id[0], genres):
+            if DBHolder.equals_genres_list(id[0], params.genres):
                 result = id
         return result[0]
 
     @staticmethod
-    def find_threshold_in_params(person_id, start_year, end_year, is_actors, rank, genres):  # int
-        pars = db.DBWork.execute_query_to_return("select * from params where person_id = {0} and start_year = {1} "
-                                                 "and end_year = {2} and is_actors = {3} and rank = {4}"
-                                                 .format(person_id, start_year, end_year, is_actors, rank))
+    def find_threshold_in_params(params):  # int
+        pars = DBHolder.__get_params(params)
         result = []
         for par in pars:
-            if DBHolder.equals_genres_list(par[0], genres):
+            if DBHolder.equals_genres_list(par[0], params.genres):
                 result.append(par[4])
         return result
 
@@ -178,9 +169,7 @@ class DBHolder:
         # поиск точно таких же параметров, но порог которых выше, возвращение наименьшего порога (то есть ближайшего);
         # если параметров таких вообще нет, то возвращает 0
         result = None
-        thr = DBHolder.find_threshold_in_params(params.person.person_id, params.start_year, params.end_year,
-                                                params.actors_only,
-                                                params.rank, params.genres)
+        thr = DBHolder.find_threshold_in_params(params)
         for m in thr:
             if params.threshold < m and (result is None or result > m):
                 result = m
@@ -218,9 +207,7 @@ class DBHolder:
 
     @staticmethod
     def add_req(req):  # user_id, params
-        params_id = DBHolder.find_id_in_params(req.params.person.person_id, req.params.start_year, req.params.end_year,
-                                               req.params.threshold, req.params.actors_only, req.params.rank,
-                                               req.params.genres)
+        params_id = DBHolder.find_id_in_params(req.params)
         if (db.DBWork.execute_query_to_return(
                 "select * from req where user_id = {0} and params_id = {1} and date = '{2}'"
                         .format(req.user_id, params_id, req.date)) == []):
@@ -229,16 +216,19 @@ class DBHolder:
                                                                                            req.date))
 
     @staticmethod
-    def show_reqs(user):  #
-        return DBHolder.create_params_to_return(
-            db.DBWork.execute_query_to_return("select * from req where user_id = {0}"
-                                              .format(user.user_id)))
+    def show_reqs(user):
+        result = [Req(user_id=e[1], date=e[3], params=DBHolder.get_params_by_id(e[2]))
+                  for e in db.DBWork.execute_query_to_return(
+                f'select * from req where user_id = {user.user_id}'
+            )]
+        return result
+        # return DBHolder.create_params_to_return(
+        #     db.DBWork.execute_query_to_return("select * from req where user_id = {0}"
+        #                                       .format(user.user_id)))
 
     @staticmethod
     def add_fav(req):
-        params_id = DBHolder.find_id_in_params(req.params.person.person_id, req.params.start_year, req.params.end_year,
-                                               req.params.threshold, req.params.actors_only, req.params.rank,
-                                               req.params.genres)
+        params_id = DBHolder.find_id_in_params(req.params)
         if (db.DBWork.execute_query_to_return(
                 "select * from req where user_id = {0} and params_id = {1} and date = '{2}'"
                         .format(req.user_id, params_id, req.date)) == []):
@@ -249,9 +239,7 @@ class DBHolder:
 
     @staticmethod
     def remove_fav(req):
-        params_id = DBHolder.find_id_in_params(req.params.person.person_id, req.params.start_year, req.params.end_year,
-                                               req.params.threshold, req.params.actors_only, req.params.rank,
-                                               req.params.genres)
+        params_id = DBHolder.find_id_in_params(req.params)
         if (db.DBWork.execute_query_to_return(
                 "select * from req where user_id = {0} and params_id = {1} and date = '{2}'"
                         .format(req.user_id, params_id, req.date)) != []):
@@ -261,12 +249,19 @@ class DBHolder:
 
     @staticmethod
     def show_favs(user):  #
-        all_req = db.DBWork.execute_query_to_return("select * from req where user_id = {0}".format(user.user_id))
-        favs = []
-        for req in all_req:
-            if (db.DBWork.execute_query_to_return("select * from fav where req_id = {0}".format(req[0])) != []):
-                favs.append(req)
-        return DBHolder.create_params_to_return(favs)
+        result = [Params(DBHolder.get_person_by_id(e[1]), e[2], e[3],
+                         DBHolder.get_genres_for_params(e[0]), e[4], e[6], e[5], e[8], e[7])
+                  for e in db.DBWork.execute_query_to_return(
+                f'select p.* from params p join req r on p.id = r.params_id join fav f on r.id = f.req_id'
+                f' where user_id = {user.user_id}'
+            )]
+        return result
+        # all_req = db.DBWork.execute_query_to_return("select * from req where user_id = {0}".format(user.user_id))
+        # favs = []
+        # for req in all_req:
+        #     if (db.DBWork.execute_query_to_return("select * from fav where req_id = {0}".format(req[0])) != []):
+        #         favs.append(req)
+        # return DBHolder.create_params_to_return(favs)
 
     @staticmethod
     def create_params_to_return(all_req):
@@ -296,3 +291,28 @@ class DBHolder:
         if answer:
             answer = answer[0][0]
         return answer
+
+    @staticmethod
+    def find_req_by_ids(params, user_id):
+        params_id = DBHolder.__get_params(params)[0][0]
+        return [Req(params=params, user_id=user_id, date=e[3])
+                for e in db.DBWork.execute_query_to_return(
+                f'select * from req where user_id = {user_id} and params_id = {params_id}')][0]
+
+    @staticmethod
+    def get_params_by_id(params_id):
+        return [Params(DBHolder.get_person_by_id(e[1]), e[2], e[3],
+                       DBHolder.get_genres_for_params(e[0]), e[4], e[6], e[5], e[8], e[7])
+                for e in db.DBWork.execute_query_to_return(
+                f'select * from params where id = {params_id}'
+            )][0]
+
+    @staticmethod
+    def get_genres_for_params(params_id):
+        return [e[0] for e in db.DBWork.execute_query_to_return(
+            f'select name from params_genre p join genre g on p.genre_id = g.id where params_id = {params_id}')]
+
+    @staticmethod
+    def get_person_by_id(person_id):
+        return [Person(e[0], e[1], e[2]) for e in db.DBWork.execute_query_to_return(
+            f'select * from person where id = {person_id}')][0]

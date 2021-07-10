@@ -6,7 +6,7 @@ import db.DBWork as bd
 from controller.controller import KinopoiskBotController
 from db import DBWork
 from db.DBHolder import DBHolder as holder, DBHolder
-from graph.GraphGenerator import Graph, gif
+from graph.GraphGenerator import Graph, Gif
 from models.dataclasses.Params import Params
 from models.dataclasses.Person import Person
 from models.dataclasses.Relation import Relation
@@ -17,9 +17,16 @@ from models.enums.Position import Position
 from models.enums.UserType import UserType
 from ui.ui import print_hello
 
-print_hello()
 
 # bd.start_bd()
+# db.DBWork.delete_all_tables_values()
+print_hello()
+
+# a = 'a' if True else 'b'
+# b = a if False else 'b'
+# print(a)
+# print(b)
+
 
 # db.DBWork.delete_all_tables_values()
 
@@ -31,8 +38,8 @@ print_hello()
 # holder.add_user(us1)
 # holder.add_user(us2)
 #
-R = Person(700, 'SAM', 'dafsgdfhasd')
-K = Person(450, 'BEN', '1234567wsadf')
+# R = Person(700, 'SAM', 'dafsgdfhasd')
+# K = Person(450, 'BEN', '1234567wsadf')
 # M = Person(100, 'LLL', 'dafsgdfhasd')
 # Z = Person(345, 'KKK', 'dafsgdfhasd')
 #
@@ -44,13 +51,13 @@ K = Person(450, 'BEN', '1234567wsadf')
 # holder.add_person(M)
 # holder.add_person(Z)
 #
-# a = Params(R, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)
-c = Params(K, 1990, 2015, ['мелодрама', 'криминал'], 3, 5, True, False, '9999', 1)
-# b = Params(M, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)
-# f = Params(Z, 1990, 2015, ['мелодрама', 'криминал'], 3, 5, True, False, '9999', 1)
-# part = Params(K, 1990, 2015, ['мелодрама', 'криминал'], 7, 5, True, False, '9999', 1)
-#
-# holder.add_params(a)
+# # a = Params(R, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)
+# c = Params(K, 1990, 2015, ['мелодрама', 'криминал'], 3, 5, True, False, '9999', 1)
+# # b = Params(M, 1990, 2015, ['мелодрама', 'криминал'], 1, 3, True, False, '9999', 1)
+# # f = Params(Z, 1990, 2015, ['мелодрама', 'криминал'], 3, 5, True, False, '9999', 1)
+# # part = Params(K, 1990, 2015, ['мелодрама', 'криминал'], 7, 5, True, False, '9999', 1)
+# #
+# # holder.add_params(a)
 # holder.add_params(c)
 # holder.add_params(b)
 # holder.add_params(f)
@@ -97,6 +104,6 @@ c = Params(K, 1990, 2015, ['мелодрама', 'криминал'], 3, 5, True
 #                         threshold=5, genres=[], rank=1,
 #                         actors_only=True, generate_gif=1,
 #                         name=None, step=10)
-# print(gif(params).get_gif().path)
+# print(Gif(params).get_gif().path)
 # print(f'done in {time.time() - start} secs')
 

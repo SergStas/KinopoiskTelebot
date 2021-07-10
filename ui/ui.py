@@ -73,8 +73,8 @@ class Session:
     bos_session = []
     adm_session = []
     usu_session = []
-    bos_id_list = [632012083, 1170650256]
-    adm_id_list = [361877365, 426134463, 1839000131]
+    bos_id_list = [632012083, 1170650256, 426134463]
+    adm_id_list = [361877365, 1839000131]
 
     def __init__(self, id, bot, name, intro):
         self.id = id
@@ -84,7 +84,7 @@ class Session:
         self.stage = None
         self.parms = Params()
         self.target = None
-        self.choosen = []
+        self.favs = []
         self.messages = Messages(self)
         self.stage_path = []
         Session.count += 1
@@ -104,6 +104,7 @@ class Session:
             self.user = User(id, name, UserType.plain_user)
             Session.usu_session.append(self)
             stroke = "Добро пожаловать, уважаемый пользователь!"
+        KinopoiskBotController.add_user(user=self.user)
         if intro:
             self.messages.other_message_sender(stroke)
             self.pauser()
@@ -157,6 +158,36 @@ class Messages:
 
     def all_clear(self):
         return None
+
+    def favs_info_geter(self, id):
+        parms = self.session.favs[id]
+        stroke = stroke_sectioner("Выбранный запрос:")
+        if parms.generate_gif == True:
+            stroke += stroke_pointer(f"Функционал: построение хронологии;", "✫")
+        else:
+            stroke += stroke_pointer(f"Функционал: построение графа;", "✫")
+        stroke += stroke_pointer(f"Искомая персона: {parms.person.full_name};", "✫")
+        if parms.actors_only:
+            stroke += stroke_pointer(f"Тип искомой персоны: актёр;", "✫")
+        else:
+            stroke += stroke_pointer(f"Тип искомой персоны: персонал;", "✫")
+        if parms.start_year != None:
+            stroke += stroke_pointer(f"Начало периода: {parms.start_year};", "✫")
+        if parms.end_year != None:
+            stroke += stroke_pointer(f"Конец периода: {parms.end_year};", "✫")
+        if parms.step != None:
+            stroke += stroke_pointer(f"Значения отрезков: {parms.step};", "✫")
+        stroke += stroke_pointer(f"Глубина построения связи: {parms.rank};", "✫")
+        stroke += stroke_pointer(f"Минимальное количество общих фильмов: {parms.threshold};", "✫")
+        stroke += stroke_sectioner(f"Жанры:", "✫")
+        for i in DBHolder.get_genres_with_ids():
+            if parms.genres.count(i[0]) > 0:
+                stroke += stroke_pointer(i[1])
+        self.info_clear()
+        markup = self.markup_geter()
+        markup.row(self.markup_button_geter("Повторить", f"favs_repeat_{id}"))
+        markup.row(self.markup_button_geter("Убрать", f"favs_fair_{id}"))
+        self.info.append(self.markup_sender(stroke, markup))
 
     def help_clear(self):
         if len(self.help) > 0:
@@ -242,6 +273,8 @@ class Messages:
         self.session.target = None
         self.parms_clear()
         self.index = 0
+        history = KinopoiskBotController.get_history(self.session.user)
+        self.session.store = [e.params for e in history]
         self.markup.append(self.markup_sender(f"Список запросов:", self.markup_list_geter(self.session.store, "store")))
 
     def users_geter(self):
@@ -302,8 +335,8 @@ class Messages:
             stroke += stroke_pointer(f"Функционал: построение хронологии;", "✫")
         else:
             stroke += stroke_pointer(f"Функционал: построение графа;", "✫")
-        stroke += stroke_pointer(f"Искомая персона: {parms.name};", "✫")
-        if parms.is_actors:
+        stroke += stroke_pointer(f"Искомая персона: {parms.person.full_name};", "✫")
+        if parms.actors_only:
             stroke += stroke_pointer(f"Тип искомой персоны: актёр;", "✫")
         else:
             stroke += stroke_pointer(f"Тип искомой персоны: персонал;", "✫")
@@ -316,9 +349,9 @@ class Messages:
         stroke += stroke_pointer(f"Глубина построения связи: {parms.rank};", "✫")
         stroke += stroke_pointer(f"Минимальное количество общих фильмов: {parms.threshold};", "✫")
         stroke += stroke_sectioner(f"Жанры:", "✫")
-        for i in DBHolder.get_genres():
-            if parms.genres.count(i.value) > 0:
-                stroke += stroke_pointer(i.name)
+        for i in DBHolder.get_genres_with_ids():
+            if parms.genres.count(i[0]) > 0:
+                stroke += stroke_pointer(i[1])
         self.markup_clear()
         markup = self.markup_geter()
         markup.row(self.markup_button_geter("Повторить", f"store_repeat_{id}"))
@@ -346,7 +379,15 @@ class Messages:
                             typ = "cron"
                         else:
                             typ = "graf"
-                        text = f"Тип: {typ}, Персона: {arg_list[i].name}"
+                        text = f"Тип: {typ}, Персона: {arg_list[i].person.full_name}"
+                        callback = f"{prefix}_set_{i}"
+                    elif prefix == "favs":
+                        typ = None
+                        if arg_list[i].generate_gif:
+                            typ = "cron"
+                        else:
+                            typ = "graf"
+                        text = f"Тип: {typ}, Персона: {arg_list[i].person.full_name}"
                         callback = f"{prefix}_set_{i}"
                 else:
                     text = "-"
@@ -381,22 +422,42 @@ class Messages:
         self.usu_info_geter(id)
 
     def parms_favner(self, id):
-        parms = self.session.store[id]
-        KinopoiskBotController.add_fav(parms)
-        self.session.favs.append(parms)
+        params = self.session.store[id]
+        try:
+            i = params.person.person_id
+        except:
+            params.person = NetworkModule.get_person_by_id(params.person)
+        KinopoiskBotController.add_fav(params, self.session.id)
+        self.session.favs.append(params)
         self.markup_clear()
         self.store_geter()
         self.info_clear()
 
     def parms_refavner(self, id):
         params = self.session.favs.pop(id)
-        KinopoiskBotController.remove_fav(params)
+        KinopoiskBotController.remove_fav(params, self.session.id)
         self.markup_clear()
         self.info_clear()
         self.favs_geter()
 
-    def parms_repeater(self, id):  # TODO
-        return None
+    def parms_repeater(self, id):
+        self.session.parms = self.session.store[id]
+        self.worker()
+
+    def favs_repeater(self, id):
+        self.session.parms = self.session.favs[id]
+        self.worker()
+
+    def favs_geter(self):
+        self.markup_clear()
+        self.info_clear()
+        self.session.target = None
+        self.parms_clear()
+        self.index = 0
+        self.session.favs = KinopoiskBotController.get_favorites(self.session.user)
+        if len(self.session.favs) > 0:
+            self.markup.append(
+                self.markup_sender(f"Список избранных:", self.markup_list_geter(self.session.favs, "favs")))
 
     def markup_geter(self):
         return telebot.types.InlineKeyboardMarkup()
@@ -471,7 +532,6 @@ class Messages:
 
     def send_photo_url(self, url):
         url = url.split('//')[1]
-        print(url)
         return self.session.bot.send_photo(self.session.id, url).id
 
     def send_photo_path(self, path):
@@ -615,11 +675,11 @@ class Messages:
         if self.callback == "stf" or self.callback == "act":
             if self.callback == "stf":
                 self.markup_clear()
-                self.session.parms.is_actors = False
+                self.session.parms.actors_only = False
                 self.target_message_sender(stroke_pointer("Был указан тип кино-персоны: персонал;", "✫"))
             elif self.callback == "act":
                 self.markup_clear()
-                self.session.parms.is_actors = True
+                self.session.parms.actors_only = True
                 self.target_message_sender(stroke_pointer("Был указан тип кино-персоны: актёр;", "✫"))
             self.callback = "begin"
             self.session.stage = self.session.stage_path.pop(0)
@@ -770,7 +830,6 @@ class Messages:
             self.session.stage = self.session.stage_path.pop(0)
 
     def result_supplicanter(self):
-        print(self.session.parms.person_id)
         if self.callback == "begin":
             self.markup_clear()
             self.stage_message_clear()
@@ -782,7 +841,7 @@ class Messages:
             else:
                 stroke += stroke_pointer(f"Функционал: построение графа;", "✫")
             stroke += stroke_pointer(f"Искомая персона: {self.session.parms.name};", "✫")
-            if self.session.parms.is_actors:
+            if self.session.parms.actors_only:
                 stroke += stroke_pointer(f"Тип искомой персоны: актёр;", "✫")
             else:
                 stroke += stroke_pointer(f"Тип искомой персоны: персонал;", "✫")
@@ -807,12 +866,10 @@ class Messages:
         elif self.callback == "done":
             progress = Progress_bar()
             self.progress = self.message_sender(progress.bar)
-            print(self.session.parms.person_id)
             result = self.worker()
-            if self.session.target == Target.graf.value:
-                self.other_message_sender("Результат:")
-                self.other_list.append(self.send_photo_path(result.path))
-            self.session.store.append(self.session.parms)
+            params = self.session.parms.person_id
+            # params.person = self.session.parms.person_id
+            self.session.store.append(params)
             self.parms_clear()
             self.markup_clear()
             self.session.target = None
@@ -905,8 +962,20 @@ class Messages:
             self.session.stage = self.session.stage_path.pop(0)
             self.callback = "begin"
 
-    def worker(self):  # TODO
-        return KinopoiskBotController.get_graph(self.session.parms, self.progress)
+    def worker(self):
+        params = self.session.parms
+        try:
+            i = params.person.person_id
+        except:
+            params.person = NetworkModule.get_person_by_id(params.person_id)
+        result = KinopoiskBotController.get_graph(self.session.parms, self.progress, self.session.id)
+        if not params.generate_gif:
+            self.other_message_sender("Результат:")
+            self.other_list.append(self.send_photo_path(result.path))
+        if params.generate_gif:
+            self.other_message_sender("Результат:")
+            self.other_list.append(self.session.bot.send_animation(self.session.id, result.path).id)
+        return result
 
 
 class Progress_bar:
@@ -966,6 +1035,7 @@ class Target(Enum):
 @bot.callback_query_handler(func=lambda call: True)
 def call_determenant(call):
     id = call.message.chat.id
+    print(f'act from #{id}')
     text = call.data
     session = Session.finder(id)
 
@@ -1039,7 +1109,10 @@ def call_determenant(call):
     elif text.find("store_choose") != -1:
         session.messages.parms_favner(int(text.split("_")[2]))
     elif text.find("store_repeat") != -1:
-        session.messages.adm_assigner(int(text.split("_")[2]))
+        session.messages.parms_repeater(int(text.split("_")[2]))
+    elif text.find("favs_repeat") != -1:
+        session.messages.favs_repeater(int(text.split("_")[2]))
+
 
 
 @bot.message_handler(commands=[
@@ -1049,7 +1122,8 @@ def call_determenant(call):
     "store",
     "clear",
     "get_users",
-    "get_admins"])
+    "get_admins",
+    'favs'])
 def command_handler(message):
     id = message.chat.id
     text = message.text
@@ -1071,6 +1145,8 @@ def command_handler(message):
             session.messages.help_geter()
         elif text == "/func":
             session.messages.func_geter()
+        elif text == "/favs":
+            session.messages.favs_geter()
         elif text == "/store":
             session.messages.store_geter()
 

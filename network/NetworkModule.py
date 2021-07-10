@@ -9,7 +9,6 @@ from network.SeleniumSessionHandler import SeleniumSessionHandler
 
 
 class RequestManager:
-    _session = None
 
     @staticmethod
     def init_session():
@@ -17,16 +16,13 @@ class RequestManager:
 
     @staticmethod
     def request(url):
-        if RequestManager._session is None:
-            RequestManager.init_session()
-        RequestManager._session.get(url)
-        return RequestManager._session.page_source
+        session = SeleniumSessionHandler.get_session()
+        session.get(url)
+        return session.page_source
 
     @staticmethod
     def get_current_session():
-        if RequestManager._session is None:
-            RequestManager.init_session()
-        return RequestManager._session
+        return SeleniumSessionHandler.get_session()
 
 
 class NetworkModule:
@@ -175,7 +171,7 @@ class NetworkModule:
                 if len(params.genres) != 0:
                     list_url = row.find('a', {'class': 'continue'}).get('href')
                     filtered_count = len(NetworkModule._filter_films(f'{NetworkModule._root_link}{list_url}', params))
-            if (params.start_year is not None) | (params.end_year is not None):
+            if (params.start_year != -1) | (params.end_year != -1):
                 list_url = row.find('a', {'class': 'continue'}).get('href')
                 filtered_count = len(NetworkModule._filter_films(f'{NetworkModule._root_link}{list_url}', params))
             if filtered_count < params.threshold:
@@ -185,6 +181,7 @@ class NetworkModule:
 
     @staticmethod
     def get_person_by_id(person_id):
+        print(f'{NetworkModule._root_link}/name/{person_id}')
         return NetworkModule._parse_person(RequestManager.get_current_session(),
                                            f'{NetworkModule._root_link}/name/{person_id}')
 

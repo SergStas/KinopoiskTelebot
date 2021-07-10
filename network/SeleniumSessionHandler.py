@@ -1,10 +1,12 @@
 import time
 
 from selenium import webdriver
+from threading import current_thread
 
 
 class SeleniumSessionHandler:
     _root_link = "https://www.kinopoisk.ru"
+    _sessions = {}
 
     @staticmethod
     def get_search_response(driver, name):
@@ -34,12 +36,17 @@ class SeleniumSessionHandler:
 
     @staticmethod
     def get_session():
-        driver = webdriver.Firefox()
-        driver.get(SeleniumSessionHandler._root_link)
-        with open('security.txt', 'r') as file:
-            content = file.read()
-            login = [row for row in content.split('\n') if len(row.split('login=')) == 2][0].split('login=')[1]
-            password = [row for row in content.split('\n') if len(row.split('password=')) == 2][0].split('password=')[1]
-        SeleniumSessionHandler\
-            ._join_for_driver(driver, login, password)
-        return driver
+        try:
+            return SeleniumSessionHandler._sessions[current_thread().name]
+        except:
+            driver = webdriver.Firefox()
+            SeleniumSessionHandler._sessions[current_thread().name] = driver
+            print(f'Session for thread {current_thread().name} has been inited')
+            driver.get(SeleniumSessionHandler._root_link)
+            with open('security.txt', 'r') as file:
+                content = file.read()
+                login = [row for row in content.split('\n') if len(row.split('login=')) == 2][0].split('login=')[1]
+                password = [row for row in content.split('\n') if len(row.split('password=')) == 2][0].split('password=')[1]
+            SeleniumSessionHandler\
+                ._join_for_driver(driver, login, password)
+            return driver

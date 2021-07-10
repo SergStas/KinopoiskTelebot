@@ -11,5 +11,4 @@ class Params:
         self.rank = rank
         self.actors_only = actors_only
         self.generate_gif = generate_gif
-        self.name = name
         self.step = step

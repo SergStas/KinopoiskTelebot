@@ -14,10 +14,9 @@ from network.NetworkModule import NetworkModule
 class Graph:
     _path = 'img/'
 
-    def __init__(self, relations, params):
+    def __init__(self, relations, params, title = ""):#Здесь
         self.params = params
         self.relations = [[rel.first.full_name, rel.second.full_name, rel.weight] for rel in relations]
-        print(self.relations)
         self.father = params.person.full_name
         # Тот с чего все началось, его вершина будет окрашена красным, скорее всего будет приходить с
         # запросом, следовательно дополнить __init_ еще на один аргумент
@@ -25,10 +24,12 @@ class Graph:
         self.h = 20  # для графика гирина по пикселям
         self.d = 100  # Для  графика, не помню зачем нужна, но нужна!
         self.G = nx.Graph()
+        self.title = title#Здесь
 
     def draw_graph(self):
         self.G.add_weighted_edges_from(self.relations)  # Все, G у нас набит связями
-        plt.figure(figsize=(self.w, self.h), dpi=self.d)
+        fig = plt.figure(figsize=(self.w, self.h), dpi=self.d)
+        fig.suptitle(self.title)#Здесь
         # print(self.G.edges())
         color_map = {self.father: 'pink'}  # Создадим Словаь цветов вершин, которые мы хотим покрасить
         values = [color_map.get(node, "Teal") for node in self.G.nodes()]# cоздаем словарь цветов для всех,
@@ -45,44 +46,8 @@ class Graph:
         plt.savefig(path)  # График оборачивается в картинку
         return GraphData(path, self.params)
 
-    # def frame_shot(self):  # Нарезка кадров от начала создания графа до создания последней вершины
-    #     new = []  # Здесь будут храниться self.relations, постепенно заполняемые значениями
-    #     images = []  # Здесь будут храниться наши снимки
-    #     ps = nx.spring_layout(self.G)
 
-    #     position_new = {}
-    #     path = None
-    #     for element in self.relations:
-
-    #         for x in ps.keys():
-    #             if position_new != {}:
-    #                 for y in position_new.keys():
-    #                     condition = False
-    #                     if y == x:
-    #                         condition = True
-    #                         break
-    #                 if not condition:
-    #                     position_new[x] = ps[x]
-    #             else:
-    #                 position_new[x] = ps[x]
-
-    #         new.append(element)
-    #         H = nx.Graph()
-    #         plt.figure(figsize=(self.w, self.h), dpi=self.d)
-    #         H.add_weighted_edges_from(new)  # По вершинам
-    #         nx.draw(H, pos=position_new, node_size=700, with_labels=True)
-    #         nx.draw_networkx_edge_labels(H, position_new)
-    #         path = f'{Graph._path}buf{current_thread().name}.png'
-    #         plt.savefig(path)
-    #         images.append(imageio.imread(path))
-
-    #     kargs = {'duration': 0.5}
-    #     imageio.mimsave(f'{Graph._path}movie{current_thread().name}.gif', images, **kargs)
-    #     print('done')
-    #     return GraphData(path=path, params=self.params)
-
-
-class gif:
+class Gif:
     _path = "gif/"
     def __init__(self, params):
         self.params = params
@@ -100,19 +65,19 @@ class gif:
     def get_gif(self):
         for i in range(self.params.start_year, self.params.end_year, self.params.step):
             rels = self.make_response(i, i + self.params.step)
-            self.__append(rels[0], rels[1])
+            self.__append(rels[0], rels[1], i)#Здесь
         path = self.merge()
         return GraphData(path=path, params=self.params)
         
-    @staticmethod
-    def __create_graph(relations, params):
-        graph = Graph(relations, params)
+    @staticmethod    
+    def __create_graph(relations, params, title):#Здесь
+        graph = Graph(relations, params, title)#Здесь
         x = graph.draw_graph()
         path = x.path
         return path
     
-    def __append(self, relations, params, name = 'movie'):
-        path = self.__create_graph(relations, params)
+    def __append(self, relations, params, title, name = 'movie'):#Здесь
+        path = self.__create_graph(relations, params, title)#Здесь
         print(f'appended frame with {len(relations)} edges')
         self.images.append(imageio.imread(path))
         
