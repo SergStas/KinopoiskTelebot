@@ -951,41 +951,36 @@ class Messages:
         if params.generate_gif:
             self.other_message_sender("Результат:")
             self.other_list.append(self.session.bot.send_animation(self.session.id, result.path).id)
+        self.progress = Progress_bar()
+        self.progress.id = self.message_sender(self.progress.pos)
+        self.progress.animater()
         return result
 
 
 class Progress_bar:
-    void = "▒"
-    point = "█"
-    left_limit = "﴾"
-    right_limit = "﴿"
-    progress_point = 10
-    progress_procent = 100
-
-    def __init__(self, id=None, chat_id=None):
+    value1 = "◒"
+    value2 = "◑"
+    value3 = "◓"
+    value4 = "◐"
+    def __init__(self,id,session):
         self.id = None
-        self.bot = bot
-        self.point = 0
-        self.chat_id = chat_id
-        self.progress = 0
-        self.bar = f"{Progress_bar.left_limit}{Progress_bar.point * self.point}{Progress_bar.void * (Progress_bar.progress_point - self.point)}{Progress_bar.right_limit}{self.progress}%"
-
-    def progresser(self):
-        self.bar = f"{Progress_bar.left_limit}{Progress_bar.point * self.point}{Progress_bar.void * (Progress_bar.progress_point - self.point)}{Progress_bar.right_limit}{self.progress}%"
-
-    def adder(self, add=1):
-        for i in range(add):
-            self.progress += 1
-            if self.progress > 100:
-                break
-            if self.progress % (
-                    Progress_bar.progress_procent / Progress_bar.progress_point) == 0 and self.progress != 0:
-                self.point += 1
-        self.progresser()
-        self.bot.edit_message_text(chat_id=self.chat_id, message_id=self.id, text=self.bar)
-
+        self.session = session
+        self.pos = Progress_bar.value1
+        self.cont = True
+    def animater(self):
+        while self.cont:
+            if self.pos == Progress_bar.value1:
+                self.pos = Progress_bar.value2
+            elif self.pos == Progress_bar.value2:
+                self.pos = Progress_bar.value3
+            elif self.pos == Progress_bar.value3:
+                self.pos = Progress_bar.value4
+            elif self.pos == Progress_bar.value4:
+                self.pos = Progress_bar.value1
+            self.session.messages.message_editer(self.id,self.pos)
+            self.session.pauser(1)
     def ender(self):
-        self.adder(add=100 - self.progress)
+        self.cont = False
 
 
 class Stage(Enum):
@@ -1057,7 +1052,7 @@ def call_determenant(call):
     elif text == "adm_up":
         session.messages.markup_list_rechanger("Список администратор:", True, Session.usu_session, "adm")
     elif text == "favs_up":
-        return None
+        session.messages.markup_list_rechanger("Список запросов:", True, session.favs, "store")
     elif text == "usu_down":
         session.messages.markup_list_rechanger("Список пользователей:", False, Session.usu_session, "usu")
     elif text == "adm_down":
@@ -1065,7 +1060,7 @@ def call_determenant(call):
     elif text == "store_up":
         session.messages.markup_list_rechanger("Список запросов:", True, session.store, "store")
     elif text == "favs_down":
-        return None
+        session.messages.markup_list_rechanger("Список запросов:", False, session.favs, "store")
     elif text == "store down":
         session.messages.markup_list_rechanger("Список запросов:", False, session.store, "store")
     elif text.find("usu_set") != -1:
