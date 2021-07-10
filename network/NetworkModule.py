@@ -1,15 +1,14 @@
 import sys
 import time
+
 from bs4 import BeautifulSoup
 
-from models.dataclasses.Params import Params
 from models.dataclasses.Person import Person
 from models.dataclasses.Relation import Relation
 from network.SeleniumSessionHandler import SeleniumSessionHandler
 
 
 class RequestManager:
-
     @staticmethod
     def init_session():
         RequestManager._session = SeleniumSessionHandler.get_session()
@@ -183,10 +182,5 @@ class NetworkModule:
 
     @staticmethod
     def get_person_by_id(person_id):
-        # print(f'{NetworkModule._root_link}/name/{person_id}')
         return NetworkModule._parse_person(RequestManager.get_current_session(),
                                            f'{NetworkModule._root_link}/name/{person_id}')
-
-# for i in NetworkModule.get_relations(Params(Person(person_id=513, full_name=None, url=None), 1990, 2015,
-#                                             [], 6, 3, True, False, '9999', 1)):
-#     print(f'{i.second.full_name} - {i.weight}')

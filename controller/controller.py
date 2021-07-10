@@ -2,17 +2,16 @@ import datetime
 
 from db import DBWork
 from db.DBHolder import DBHolder
-from graph.GraphGenerator import Graph, Gif
-from models.dataclasses.Params import Params
+from graph.GraphGenerator import Graph, Gif, Chart
 from models.dataclasses.Req import Req
-from network.NetworkModule import NetworkModule, RequestManager
-from network.SeleniumSessionHandler import SeleniumSessionHandler
+from network.NetworkModule import NetworkModule
 
 
 class KinopoiskBotController:
     @staticmethod
     def get_visits():
-        return 'url'
+        visit_stats = DBHolder.get_visit_stats()
+        return Chart.get_visits_chart(visit_stats)
 
     @staticmethod
     def init():
