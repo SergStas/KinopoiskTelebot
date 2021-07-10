@@ -950,7 +950,7 @@ class Messages:
             self.other_list.append(self.send_photo_path(result.path))
         if params.generate_gif:
             self.other_message_sender("Результат:")
-            self.other_list.append(self.session.bot.send_animation(self.session.id, result.path).id)
+            self.other_list.append(self.session.bot.send_animation(self.session.id,open(result.path,"rb")).id)
         self.progress = Progress_bar()
         self.progress.id = self.message_sender(self.progress.pos)
         self.progress.animater()
