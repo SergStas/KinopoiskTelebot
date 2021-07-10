@@ -1,12 +1,12 @@
-import telebot
 import asyncio
 from enum import Enum, auto
+
+import telebot
+from controller.controller import KinopoiskBotController
 from db.DBHolder import DBHolder
 from models.dataclasses.Params import Params
 from models.dataclasses.User import User
 from models.enums.UserType import UserType
-
-from controller.controller import KinopoiskBotController
 from network.NetworkModule import NetworkModule
 
 
@@ -30,42 +30,6 @@ def stroke_sectioner(stroke, point=""):
     if point != "":
         point += " "
     return f"{point}{stroke}\n-----\n"
-
-
-# class User:
-#     def __init__(self, id, type, name):
-#         if type == "usu" or type == "adm" or type == "bos":
-#             self.id = id
-#             self.type = type
-#             self.name = name
-#             self.last_date_use = date.today()
-#             self.start_date_use = date.today()
-#         else:
-#             print("* err - Был указан несуществующий тип пользователя;")
-#
-#
-# class Parms:
-#     def __init__(self):
-#         self.name = None
-#         self.rank = None
-#         self.step = None
-#         self.geners = []
-#         self.threshold = None
-#         self.end_year = None
-#         self.is_actors = None
-#         self.person_id = None
-#         self.start_year = None
-#         self.generate_gif = None
-#
-#
-# class Person:
-#     def __init__(self, person_id, person_type, full_name, positions, start_year, end_year, photo_url):
-#         self.person_id = person_id
-#         self.full_name = full_name
-#         self.positions = positions
-#         self.start_year = start_year
-#         self.end_year = end_year
-#         self.photo_url = photo_url
 
 
 class Session:
@@ -398,6 +362,11 @@ class Messages:
                 self.markup_button_geter("⮟", f"{prefix}_down")
             )
             return markup
+
+    def visits_stats_geter(self):
+        self.other_message_sender("Статистика посещаемости:")
+        self.session.pauser()
+        self.session.other_list.append(self,send_photo_path(get_visits()))
 
     def markup_button_geter(self, arg_text, callback):
         return telebot.types.InlineKeyboardButton(text=arg_text, callback_data=callback)
@@ -1120,11 +1089,12 @@ def call_determenant(call):
     "id",
     "func",
     "help",
+    'favs',
     "store",
     "clear",
     "get_users",
     "get_admins",
-    'favs'])
+    "visits_stats"])
 def command_handler(message):
     id = message.chat.id
     text = message.text
@@ -1138,6 +1108,8 @@ def command_handler(message):
                 if text == "/get_admins":
                     session.messages.index = 0
                     session.messages.admins_geter()
+                elif text == "/visits_stats":
+                    session.messages.visits_stats_geter()
         if session.target != None:
             i = 0
         if text == "/id":
